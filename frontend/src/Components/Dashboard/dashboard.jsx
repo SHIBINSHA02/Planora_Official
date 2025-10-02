@@ -30,19 +30,20 @@ const Dashboard = ({ initialTab = 'dashboard' }) => {
               Dashboard
             </a>
             <a
-              className={`${activeTab === 'teacher' ? 'text-indigo-600 font-semibold' : 'text-gray-600'} hover:text-indigo-700`}
-              href="/teacher"
-              onClick={(e) => { e.preventDefault(); window.history.pushState({}, '', '/teacher'); window.dispatchEvent(new PopStateEvent('popstate')); setActiveTab('teacher'); }}
-            >
-              Teacher
-            </a>
-            <a
               className={`${activeTab === 'classroom' ? 'text-indigo-600 font-semibold' : 'text-gray-600'} hover:text-indigo-700`}
               href="/classroom"
               onClick={(e) => { e.preventDefault(); window.history.pushState({}, '', '/classroom'); window.dispatchEvent(new PopStateEvent('popstate')); setActiveTab('classroom'); }}
             >
               Classroom
             </a>
+            <a
+              className={`${activeTab === 'teacher' ? 'text-indigo-600 font-semibold' : 'text-gray-600'} hover:text-indigo-700`}
+              href="/teacher"
+              onClick={(e) => { e.preventDefault(); window.history.pushState({}, '', '/teacher'); window.dispatchEvent(new PopStateEvent('popstate')); setActiveTab('teacher'); }}
+            >
+              Teacher
+            </a>
+            
           </div>
         </nav>
 
