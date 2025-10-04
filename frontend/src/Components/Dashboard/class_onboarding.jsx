@@ -1,3 +1,4 @@
+// frontend/src/Components/Dashboard/class_onboarding.jsx
 import React, { useEffect, useMemo, useState } from 'react';
 
 // --- Mock Data and Utilities (Replacing API) ---

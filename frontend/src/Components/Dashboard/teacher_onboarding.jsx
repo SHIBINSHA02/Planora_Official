@@ -1,3 +1,4 @@
+// frontend/src/Components/Dashboard/teacher_onboarding.jsx
 import React, { useState } from 'react';
 
 const TeacherOnboarding = () => {
@@ -29,7 +30,7 @@ const TeacherOnboarding = () => {
       return;
     }
 
-    const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
+    const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000';
     const payload = {
       teachername: trimmedName,
       mailid: trimmedEmail,
@@ -37,7 +38,7 @@ const TeacherOnboarding = () => {
     };
 
     try {
-      const res = await fetch(`${API_BASE}/timetable/add_teacher`, {
+      const res = await fetch(`${API_BASE}/api/teachers`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
