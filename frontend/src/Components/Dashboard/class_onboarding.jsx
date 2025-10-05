@@ -1,17 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { io } from "socket.io-client";
 
-// --- Configuration and Mock Data ---
-const API_URL = "http://localhost:3000/api/classrooms"; // Adjust backend URL if deployed
-
-// Teacher Data (used for dropdowns)
-const TEACHER_DATA = [
-  { teachername: "Alice Smith", teacher_id: "A101", subjects: ["Mathematics", "Physics"] },
-  { teachername: "Bob Johnson", teacher_id: "B202", subjects: ["History", "English", "Literature"] },
-  { teachername: "Charlie Brown", teacher_id: "C303", subjects: ["Science", "Chemistry"] },
-];
-
-// Generate unique subjects list
-const ALL_SUBJECTS = Array.from(new Set(TEACHER_DATA.flatMap(t => t.subjects)));
+const API_BASE = "http://localhost:3000"; // backend base URL
+const TEACHERS_API = `${API_BASE}/api/teachers`;
+const CLASSROOM_API = `${API_BASE}/api/classrooms`;
 
 // Utility: generate empty 5x6 schedule matrix
 const generateEmptySchedule = () => {
@@ -36,9 +28,55 @@ const ClassOnboarding = () => {
   const [submissionMessage, setSubmissionMessage] = useState(null);
 
   // --- Data State ---
-  const [teachers] = useState(TEACHER_DATA);
-  const [availableSubjects, setAvailableSubjects] = useState(ALL_SUBJECTS);
+  const [teachers, setTeachers] = useState([]); // Initially empty
+  const [availableSubjects, setAvailableSubjects] = useState([]);
 
+  // --- SOCKET CONNECTION ---
+  useEffect(() => {
+    // Fetch initial teacher list from API
+    const fetchTeachers = async () => {
+      try {
+        const response = await fetch(TEACHERS_API);
+        if (response.ok) {
+          const data = await response.json();
+          setTeachers(data);
+          const allSubjects = Array.from(new Set(data.flatMap(t => t.subjects || [])));
+          setAvailableSubjects(allSubjects);
+        } else {
+          console.error("Failed to fetch teachers from API");
+        }
+      } catch (error) {
+        console.error("Error fetching teachers:", error);
+      }
+    };
+
+    fetchTeachers();
+
+    // Connect to Socket.IO backend
+    const socket = io(API_BASE);
+
+    socket.on("connect", () => {
+      console.log("🟢 Connected to backend socket:", socket.id);
+    });
+
+    socket.on("teacher_added", (newTeacher) => {
+      console.log("👩‍🏫 New teacher received via socket:", newTeacher);
+      setTeachers(prev => {
+        const exists = prev.some(t => t._id === newTeacher._id);
+        return exists ? prev : [...prev, newTeacher];
+      });
+    });
+
+    socket.on("disconnect", () => {
+      console.log("🔴 Socket disconnected");
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+
+  // --- Memoized Data ---
   const teacherNames = useMemo(() => teachers.map(t => t.teachername), [teachers]);
   const selectedTeacher = useMemo(() => teachers.find(t => t.teachername === teacherName), [teacherName, teachers]);
 
@@ -47,7 +85,8 @@ const ClassOnboarding = () => {
     setSubmissionMessage(null);
 
     if (!teacherName) {
-      setAvailableSubjects(ALL_SUBJECTS);
+      const allSubjects = Array.from(new Set(teachers.flatMap(t => t.subjects || [])));
+      setAvailableSubjects(allSubjects);
       return;
     }
 
@@ -55,7 +94,8 @@ const ClassOnboarding = () => {
       setAvailableSubjects(selectedTeacher.subjects);
       if (!selectedTeacher.subjects.includes(subject)) setSubject("");
     } else {
-      setAvailableSubjects(ALL_SUBJECTS);
+      const allSubjects = Array.from(new Set(teachers.flatMap(t => t.subjects || [])));
+      setAvailableSubjects(allSubjects);
     }
   }, [teacherName, teachers, subject, selectedTeacher]);
 
@@ -83,7 +123,7 @@ const ClassOnboarding = () => {
       ...prev,
       {
         teacherName: trimmedTeacher,
-        teacherId: selectedTeacher.teacher_id,
+        teacherId: selectedTeacher.teacherid,
         subject: trimmedSubject,
         count: numericCount,
       },
@@ -119,14 +159,12 @@ const ClassOnboarding = () => {
       return;
     }
 
-    // Build subjects array for payload
     const subjectsPayload = assignedTeachers.map(t => ({
       subject: t.subject,
       teachername: t.teacherName,
       time: Number(t.count),
     }));
 
-    // Construct payload exactly as backend expects
     const payload = {
       classroom_id: trimmedClass.toUpperCase().replace(/[^A-Z0-9]/g, "-") + "-ID",
       classname: trimmedClass,
@@ -139,9 +177,7 @@ const ClassOnboarding = () => {
       setIsSubmitting(true);
       setSubmissionMessage(null);
 
-      console.log("Submitting Payload:", payload);
-
-      const response = await fetch(API_URL, {
+      const response = await fetch(CLASSROOM_API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -182,7 +218,6 @@ const ClassOnboarding = () => {
         return "bg-blue-100 text-blue-700 border-blue-400";
     }
   };
-
   // --- Render UI ---
   return (
     <div className="p-6 max-w-2xl mx-auto bg-gray-50 rounded-xl shadow-lg">

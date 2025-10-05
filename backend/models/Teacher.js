@@ -1,3 +1,4 @@
+// backend/models/Teacher.js
 const mongoose = require('mongoose');
 
 const TeacherSchema = new mongoose.Schema({

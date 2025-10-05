@@ -1,50 +1,61 @@
-// app.js (Main Express File)
-
+// backend/server.js
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const morgan = require('morgan'); // <-- ADDED: Import Morgan for logging
-const teacherRoutes = require('./routes/teacherRoutes'); 
+const morgan = require('morgan');
+const http = require('http');
+const { Server } = require('socket.io');
+
+const teacherRoutes = require('./routes/teacherRoutes');
 const classroomRoutes = require('./routes/classroomRoutes');
+const { teacherEmitter } = require('./controllers/teacherController');
 
 const app = express();
+const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
 
-// ------------------------------------
-// Database Connection
-// ------------------------------------
+// MongoDB Connection
 mongoose.connect('mongodb://localhost:27017/planora_official', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
 })
 .then(() => console.log('✅ MongoDB connected successfully'))
 .catch(err => console.error('❌ MongoDB connection error:', err));
 
-// ------------------------------------
-// Middleware Setup
-// ------------------------------------
-
-// Enable CORS for cross-origin requests
+// Middleware
 app.use(cors());
-
-// Enable request body parsing for JSON
 app.use(express.json());
-
-// Add Morgan middleware for request logging
-// The 'dev' format gives concise colored output for development
 app.use(morgan('dev'));
 
-// ------------------------------------
-// Route Handlers
-// ------------------------------------
+// Routes
 app.use('/api/teachers', teacherRoutes);
 app.use('/api/classrooms', classroomRoutes);
 
-// ------------------------------------
+// Socket.IO setup
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  },
+});
+
+io.on('connection', (socket) => {
+  console.log(`🟢 Client connected: ${socket.id}`);
+  socket.on('disconnect', () => console.log(`🔴 Client disconnected: ${socket.id}`));
+});
+
+// ----------------------------
+// Connect EventEmitter to Socket.IO
+// ----------------------------
+teacherEmitter.on('teacher_created', (teacher) => {
+  console.log('📢 Broadcasting new teacher to clients:', teacher.teacherid);
+  io.emit('teacher_added', teacher);
+});
+
+// ----------------------------
 // Start Server
-// ------------------------------------
-app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`📘 Teacher API: http://localhost:${PORT}/api/teachers`);
-    console.log(`📘 Classroom API: http://localhost:${PORT}/api/classrooms`);
+// ----------------------------
+server.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📘 Teacher API: http://localhost:${PORT}/api/teachers`);
 });

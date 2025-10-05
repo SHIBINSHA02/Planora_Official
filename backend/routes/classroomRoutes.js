@@ -1,3 +1,4 @@
+// backend/routes/classroomRoutes.js
 const express = require('express');
 const router = express.Router();
 const classroomController = require('../controllers/classroomController');
