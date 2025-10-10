@@ -3,8 +3,8 @@ import React, { useEffect, useState } from 'react';
 import ClassOnboarding from './class_onboarding';
 import TeacherOnboarding from './teacher_onboarding';
 import DownloadPanel from './download_panel';
-import Teacher from '../teacher/teacher';
-import Classroom from '../classroom/classroom';
+import Teacher from '../Teacher/teacher';
+import Classroom from '../Classroom/classroom';
 
 const Dashboard = ({ initialTab = 'dashboard' }) => {
   const [activeTab, setActiveTab] = useState(initialTab);
