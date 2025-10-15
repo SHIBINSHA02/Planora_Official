@@ -1,3 +1,4 @@
+// backend/models/classroomModel.js
 const mongoose = require('mongoose');
 
 // Schema for individual slot in schedule

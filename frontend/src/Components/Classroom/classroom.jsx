@@ -1,3 +1,4 @@
+// frontend/src/Components/Classroom/classroom.jsx
 import React, { useState } from "react";
 import ClassroomScheduleView from "./ClassroomScheduleView.jsx";
 import ErrorBoundary from "./ErrorBoundary.jsx";
