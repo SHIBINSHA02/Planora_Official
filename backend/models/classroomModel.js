@@ -47,8 +47,50 @@ async function saveClassroom(data) {
   return classroom;
 }
 
+async function getClassroomById(classroomId) {
+  return await Classroom.findOne({ classroom_id: classroomId }).lean();
+}
+
+async function updateClassroom(classroomId, updateData) {
+  return await Classroom.findOneAndUpdate(
+    { classroom_id: classroomId },
+    { $set: updateData },
+    { new: true, runValidators: true }
+  ).lean();
+}
+
+async function deleteClassroomById(classroomId) {
+  return await Classroom.findOneAndDelete({ classroom_id: classroomId }).lean();
+}
+
 module.exports = {
   Classroom,
   checkClassroomExists,
-  saveClassroom
+  saveClassroom,
+  getClassroomById,
+  updateClassroom,
+  deleteClassroomById
 };
+classroomSchema.pre('save', function(next) {
+  if (!this.schedule || !Array.isArray(this.schedule)) {
+    this.schedule = Array(5).fill(Array(6).fill([]));
+  } else {
+    // Validate and fix schedule structure
+    const validSchedule = Array(5).fill().map(() => Array(6).fill([]));
+    this.schedule.forEach((day, dayIndex) => {
+      if (Array.isArray(day) && dayIndex < 5) {
+        day.forEach((period, periodIndex) => {
+          if (Array.isArray(period) && periodIndex < 6) {
+            validSchedule[dayIndex][periodIndex] = period.filter(slot => 
+              slot && slot.teacher_id && slot.teacher_name && slot.subject
+            );
+          }
+        });
+      }
+    });
+    this.schedule = validSchedule;
+  }
+  next();
+});
+
+
