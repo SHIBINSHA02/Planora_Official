@@ -20,13 +20,13 @@ const TeacherSchema = new mongoose.Schema({
         trim: true
     },
     subjects: {
-        type: [String], // Array of strings for subjects
+        type: [String],
         required: true
     },
-    // Default schedule grid: 5 days (rows) x 6 periods (cols)
     schedule_grid: {
-        type: [[String]], 
-        default: [
+      
+        type: [[mongoose.Schema.Types.Mixed]], 
+        default: () => [
             [null, null, null, null, null, null],
             [null, null, null, null, null, null],
             [null, null, null, null, null, null],

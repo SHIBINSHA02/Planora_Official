@@ -2,14 +2,10 @@
 const Teacher = require('../models/Teacher');
 const EventEmitter = require('events');
 
-// Create an internal event emitter to signal new teacher creation
 const teacherEmitter = new EventEmitter();
 exports.teacherEmitter = teacherEmitter;
 
-/**
- * NOTE: This is a simple, non-production-safe ID generation. 
- * In a real application, use atomic operations or UUIDs.
- */
+
 const generateTeacherId = async () => {
     const lastTeacher = await Teacher.findOne({}).sort({ teacherid: -1 }).limit(1);
     let newIdNumber = 101; 
@@ -22,7 +18,7 @@ const generateTeacherId = async () => {
     return `T-${newIdNumber}`;
 };
 
-// Controller function to handle POST /api/teachers
+// POST /api/teachers - Create a new teacher
 exports.createTeacher = async (req, res) => {
     try {
         const { teachername, mailid, subjects } = req.body;
@@ -59,7 +55,7 @@ exports.createTeacher = async (req, res) => {
     }
 };
 
-// Optional: add more handlers (these do not change your create logic)
+// GET /api/teachers - Retrieve all teachers
 exports.getAllTeachers = async (req, res) => {
     try {
         const teachers = await Teacher.find();
@@ -69,6 +65,7 @@ exports.getAllTeachers = async (req, res) => {
     }
 };
 
+// GET /api/teachers/:id - Retrieve a single teacher by MongoDB _id
 exports.getTeacherById = async (req, res) => {
     try {
         const teacher = await Teacher.findById(req.params.id);
@@ -76,5 +73,79 @@ exports.getTeacherById = async (req, res) => {
         res.status(200).json(teacher);
     } catch (err) {
         res.status(500).json({ message: "Error fetching teacher", details: err.message });
+    }
+};
+
+// PUT /api/teachers/:teacherid - Update a teacher's information
+exports.updateTeacher = async (req, res) => {
+    try {
+        const { teacherid } = req.params;
+        const updateData = req.body;
+
+        // --- Improved Validation ---
+        // 1. Prevent changing the unique teacherid
+        if (updateData.teacherid && updateData.teacherid !== teacherid) {
+            return res.status(400).json({ message: "Cannot change the teacher's ID." });
+        }
+        
+        // 2. If a schedule_grid is being updated, validate its dimensions
+        if (updateData.schedule_grid) {
+            const grid = updateData.schedule_grid;
+            if (!Array.isArray(grid) || grid.length !== 5 || grid.some(row => !Array.isArray(row) || row.length !== 6)) {
+                return res.status(400).json({ 
+                    message: "Invalid schedule_grid format. It must be a 5x6 array." 
+                });
+            }
+        }
+
+        // Find the teacher by their custom `teacherid` and update them
+        const updatedTeacher = await Teacher.findOneAndUpdate(
+            { teacherid: teacherid },
+            { $set: updateData },
+            { new: true, runValidators: true } // Options: return the new version, run schema validators
+        );
+
+        if (!updatedTeacher) {
+            return res.status(404).json({ message: `Teacher with ID '${teacherid}' not found.` });
+        }
+
+        res.status(200).json({
+            message: "Teacher updated successfully.",
+            teacher: updatedTeacher
+        });
+
+    } catch (error) {
+        console.error('Error updating teacher:', error);
+        if (error.code === 11000) {
+            return res.status(409).json({ message: "Update failed: A teacher with this Mail ID already exists." });
+        }
+        // This will now handle schema validation errors more gracefully
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({ message: `Validation Error: ${error.message}` });
+        }
+        res.status(500).json({ message: "Server error during teacher update." });
+    }
+};
+
+
+// DELETE /api/teachers/:teacherid - Delete a teacher
+exports.deleteTeacher = async (req, res) => {
+    try {
+        const { teacherid } = req.params;
+
+        const deletedTeacher = await Teacher.findOneAndDelete({ teacherid: teacherid });
+
+        if (!deletedTeacher) {
+            return res.status(404).json({ message: `Teacher with ID '${teacherid}' not found.` });
+        }
+
+ 
+        res.status(200).json({
+            message: `Teacher '${deletedTeacher.teachername}' (ID: ${teacherid}) was deleted successfully.`
+        });
+
+    } catch (error) {
+        console.error('Error deleting teacher:', error);
+        res.status(500).json({ message: "Server error during teacher deletion." });
     }
 };
