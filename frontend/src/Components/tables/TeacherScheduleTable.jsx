@@ -7,7 +7,7 @@ const TeacherScheduleTable = ({ scheduleData, days, periods }) => {
     if (cell) {
       return (
         <div className="bg-blue-100 p-2 rounded text-xs">
-          <div className="font-semibold text-blue-800">{cell.classroom}</div>
+          <div className="font-semibold text-blue-800">{cell.classroomName}</div>
           <div className="text-blue-600">{cell.subject}</div>
           <div className="text-blue-500">{cell.grade}</div>
         </div>
