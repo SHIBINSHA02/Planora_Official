@@ -7,16 +7,16 @@ exports.teacherEmitter = teacherEmitter;
 
 
 const generateTeacherId = async () => {
-    const lastTeacher = await Teacher.findOne({}).sort({ teacherid: -1 }).limit(1);
-    let newIdNumber = 101; 
+  const lastTeacher = await Teacher.findOne({})
+    .sort({ createdAt: -1 }) // safer chronological sort
+    .lean();
 
-    if (lastTeacher && lastTeacher.teacherid) {
-        const lastNumber = parseInt(lastTeacher.teacherid.replace('T-', ''));
-        newIdNumber = lastNumber + 1;
-    }
+  if (!lastTeacher) return "T-101";
 
-    return `T-${newIdNumber}`;
+  const lastNumber = parseInt(lastTeacher.teacherid.replace('T-', '')) || 100;
+  return `T-${lastNumber + 1}`;
 };
+
 
 // POST /api/teachers - Create a new teacher
 exports.createTeacher = async (req, res) => {
