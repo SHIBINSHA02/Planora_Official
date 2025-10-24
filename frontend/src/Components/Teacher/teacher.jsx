@@ -1,6 +1,6 @@
 // frontend/src/Components/Teacher/teacher.jsx
 import React, { useEffect, useState } from "react";
-import ScheduleTable from "../tables/ScheduleTable";
+import TeacherScheduleTable from "../tables/TeacherScheduleTable"; // Import the new, focused table component
 
 const Teacher = () => {
   const [teachers, setTeachers] = useState([]);
@@ -12,74 +12,89 @@ const Teacher = () => {
   const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
   const periods = ["Period 1", "Period 2", "Period 3", "Period 4", "Period 5", "Period 6"];
 
-  // 🔹 1. Fetch all teachers when component mounts
+  // Effect 1: Fetch all teachers to populate the dropdown when the component mounts.
   useEffect(() => {
     const fetchTeachers = async () => {
       try {
+        // Fetch from the endpoint that lists all teachers
         const response = await fetch("http://localhost:3000/api/teachers/");
-        if (!response.ok) throw new Error(`Failed to fetch teachers: ${response.statusText}`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch teachers: ${response.statusText}`);
+        }
         const data = await response.json();
         setTeachers(data);
       } catch (err) {
         console.error(err);
-        setError("Failed to load teacher list. Please check your server.");
+        setError("Failed to load teacher list. Please check the server.");
       }
     };
     fetchTeachers();
-  }, []);
+  }, []); // Empty dependency array means this runs once on mount
 
-  // 🔹 2. Fetch selected teacher’s schedule
+  // Effect 2: Fetch the selected teacher’s schedule whenever `selectedTeacherId` changes.
   useEffect(() => {
     const fetchTeacherSchedule = async () => {
-      if (!selectedTeacherId) return;
+      // Don't run if no teacher is selected
+      if (!selectedTeacherId) {
+        setScheduleData([]); // Clear schedule if no teacher is selected
+        return;
+      }
+
       setLoading(true);
       setError("");
+
       try {
+        // Fetch from the endpoint for a specific teacher by their ID
         const response = await fetch(`http://localhost:3000/api/teachers/${selectedTeacherId}`);
-        if (!response.ok) throw new Error("Failed to fetch teacher details");
+        if (!response.ok) {
+          throw new Error("Failed to fetch teacher details");
+        }
         const teacher = await response.json();
 
-        // ✅ Update schedule grid dynamically from backend
+        // Set the scheduleData state with the schedule_grid from the API response
         setScheduleData(teacher.schedule_grid || []);
       } catch (err) {
         console.error(err);
         setError("Error fetching teacher schedule. Please try again.");
+        setScheduleData([]); // Clear schedule on error
       } finally {
         setLoading(false);
       }
     };
 
     fetchTeacherSchedule();
-  }, [selectedTeacherId]);
+  }, [selectedTeacherId]); // This effect re-runs whenever `selectedTeacherId` changes
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold text-gray-900 mb-4">Teacher</h1>
+    <div className="p-6 bg-gray-50 min-h-full">
+      <h1 className="text-3xl font-bold text-gray-900 mb-6">Teacher Schedule Viewer</h1>
 
-      {/* Teacher Selection */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">Teacher</label>
-        <div className="relative w-[400px]">
+      {/* Teacher Selection Dropdown */}
+      <div className="mb-6">
+        <label htmlFor="teacher-select" className="block text-sm font-medium text-gray-700 mb-1">
+          Select a Teacher
+        </label>
+        <div className="relative w-full max-w-sm">
           <select
+            id="teacher-select"
             value={selectedTeacherId}
             onChange={(e) => setSelectedTeacherId(e.target.value)}
-            className={`w-full appearance-none rounded-md bg-white border border-gray-300 px-3 py-2 pr-12 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 ${
+            className={`w-full appearance-none rounded-md bg-white border border-gray-300 px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
               selectedTeacherId ? "text-gray-900" : "text-gray-400"
             }`}
           >
             <option value="" disabled>
-              Select a teacher
+              -- Select a teacher --
             </option>
+            {/* Map over the fetched teachers to create the options */}
             {teachers.map((t) => (
               <option key={t._id} value={t._id}>
                 {t.teachername}
               </option>
             ))}
           </select>
-
-          {/* Dropdown Icon */}
-          <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+          <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path
                 fillRule="evenodd"
                 d="M5.23 7.21a.75.75 0 011.06.02L10 11.114l3.71-3.884a.75.75 0 111.08 1.04l-4.24 4.44a.75.75 0 01-1.08 0l-4.24-4.44a.75.75 0 01.02-1.06z"
@@ -91,21 +106,17 @@ const Teacher = () => {
       </div>
 
       {/* Loading & Error States */}
-      {loading && <p className="text-gray-600 mb-2">Loading schedule...</p>}
-      {error && <p className="text-red-600 mb-2">{error}</p>}
+      {loading && <p className="text-gray-600">Loading schedule...</p>}
+      {error && <p className="text-red-600 font-medium">{error}</p>}
 
-      {/* Schedule Table */}
-      {selectedTeacherId && !loading && (
+      {/* Schedule Table - Renders only when a teacher is selected and not loading */}
+      {selectedTeacherId && !loading && !error && (
         <>
-          <div className="mb-2 text-gray-700 font-medium">Weekly Schedule Overview</div>
-          <ScheduleTable
+          <h2 className="text-xl font-semibold text-gray-800 mb-3">Weekly Schedule Overview</h2>
+          <TeacherScheduleTable
             scheduleData={scheduleData.length ? scheduleData : Array(5).fill(Array(6).fill(null))}
             days={days}
             periods={periods}
-            teachers={teachers}
-            onUpdateSchedule={() => {}}
-            type="teacher"
-            teacherSchedules={{}}
           />
         </>
       )}

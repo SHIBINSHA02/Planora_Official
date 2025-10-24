@@ -1,7 +1,7 @@
 // frontend/src/Components/Classroom/ClassroomScheduleView.jsx
 import React from 'react';
 import PropTypes from 'prop-types';
-import ScheduleTable from '../tables/ScheduleTable'; // Make sure this path is correct
+import ClassroomScheduleTable from '../tables/ClassroomScheduleTable'; // Import the new component
 
 const ClassroomScheduleView = ({
   classrooms,
@@ -23,13 +23,13 @@ const ClassroomScheduleView = ({
 
   return (
     <div className="space-y-6 mt-6">
-      <ScheduleTable
+      <ClassroomScheduleTable // Use the new component
         scheduleData={classSchedules[selectedClassroom]}
         days={days}
         periods={periods}
         teachers={teachers}
         subjects={availableSubjects}
-        onUpdateSchedule={(dayIndex, periodIndex, teacherId, subject) => 
+        onUpdateSchedule={(dayIndex, periodIndex, teacherId, subject) =>
           handleUpdateSchedule(selectedClassroom, dayIndex, periodIndex, teacherId, subject)
         }
       />
