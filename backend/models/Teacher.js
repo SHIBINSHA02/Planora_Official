@@ -25,14 +25,9 @@ const TeacherSchema = new mongoose.Schema({
     },
     schedule_grid: {
       
-        type: [[mongoose.Schema.Types.Mixed]], 
-        default: () => [
-            [null, null, null, null, null, null],
-            [null, null, null, null, null, null],
-            [null, null, null, null, null, null],
-            [null, null, null, null, null, null],
-            [null, null, null, null, null, null]
-        ]
+       
+        type: [[mongoose.Schema.Types.Mixed]],
+        default: () => Array.from({ length: 5 }, () => Array(6).fill(null))
     }
 });
 

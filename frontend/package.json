@@ -10,8 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@heroicons/react": "^2.2.0",
     "axios": "^1.12.2",
     "cors": "^2.8.5",
+    "heroicons": "^2.2.0",
     "lucide": "^0.544.0",
     "lucide-react": "^0.544.0",
     "prop-types": "^15.8.1",
