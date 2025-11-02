@@ -1,3 +1,4 @@
+// frontend/src/Components/Classroom/ErrorBoundary.jsx
 // frontend/src/components/ErrorBoundary.jsx
 import React from 'react'
 

@@ -9,10 +9,7 @@ const ClassroomScheduleTable = ({
   days,
   periods,
   teachers = [],
-  // The 'subjects' prop is now used as a fallback if classroomSubjects is not provided
-  subjects = [], 
-  // NEW PROP: Pass the subjects specific to this classroom
-  classroomSubjects = [], 
+  subjects = [],
   onUpdateSchedule, // Callback to update the parent component's state
 }) => {
   const [isMultiSelect, setIsMultiSelect] = useState(false);
@@ -124,7 +121,7 @@ const ClassroomScheduleTable = ({
   };
 
   // ====================================================================================
-  // 🔹 CELL RENDERING LOGIC (UPDATED WITH DEPENDENT FILTERING)
+  // 🔹 CELL RENDERING LOGIC
   // This function prepares the data for each cell, including filtering for available teachers.
   // ====================================================================================
   const renderCell = (cell, rowIndex, colIndex) => {
@@ -134,7 +131,7 @@ const ClassroomScheduleTable = ({
     const currentSubject = assignment.subject || "";
 
     // CRITICAL LOGIC: Filter teachers to show only those available for this specific slot.
-    const baseAvailableTeachers = teachers.filter((teacher) => {
+    const availableTeachers = teachers.filter((teacher) => {
       // A teacher is available if their schedule grid for this day/period is null.
       const isTeacherFree = teacher.schedule_grid?.[rowIndex]?.[colIndex] === null;
       // Also, the teacher currently assigned to this slot should be considered available to allow re-selection or changes.
@@ -142,35 +139,9 @@ const ClassroomScheduleTable = ({
       return isTeacherFree || isCurrentlyAssigned;
     });
 
-    // ====================================================================================
-    // 🔹 DEPENDENT DROPDOWN LOGIC
-    // ====================================================================================
-    let filteredTeachers = baseAvailableTeachers;
-    // Use classroom-specific subjects if available, otherwise fall back to all subjects
-    let filteredSubjects = classroomSubjects.length > 0 ? classroomSubjects : subjects;
-
-    // If a subject is selected, filter teachers to only those who can teach that subject.
-    if (currentSubject) {
-      filteredTeachers = baseAvailableTeachers.filter(
-        (teacher) => teacher.subjects && teacher.subjects.includes(currentSubject)
-      );
-    }
-
-    // If a teacher is selected, filter subjects to only those taught by the teacher AND belonging to the classroom.
-    if (currentTeacherId) {
-      const selectedTeacher = teachers.find((t) => t._id === currentTeacherId);
-      if (selectedTeacher && Array.isArray(selectedTeacher.subjects)) {
-        const teacherSubjects = selectedTeacher.subjects;
-        // Find the intersection of the classroom's subjects and the teacher's subjects.
-        filteredSubjects = filteredSubjects.filter((subject) =>
-          teacherSubjects.includes(subject)
-        );
-      }
-    }
-
-    // Sort the final filtered lists for consistent display
-    const sortedTeachers = [...filteredTeachers].sort((a, b) => (a.teachername || "").localeCompare(b.teachername || ""));
-    const sortedSubjects = [...filteredSubjects].sort((a, b) => a.localeCompare(b));
+    // Sort teachers and subjects for consistent display
+    const sortedTeachers = [...availableTeachers].sort((a, b) => (a.teachername || "").localeCompare(b.teachername || ""));
+    const sortedSubjects = [...subjects].sort((a, b) => a.localeCompare(b));
 
     // Handlers that call the parent's `onUpdateSchedule` function
     const handleClear = () => {
@@ -178,25 +149,11 @@ const ClassroomScheduleTable = ({
     };
 
     const handleTeacherChange = (newTeacherId) => {
-        const newTeacher = teachers.find(t => t._id === newTeacherId);
-        let subjectToSet = currentSubject;
-    
-        // UX Improvement: If the currently selected subject is not taught by the new teacher, clear the subject.
-        if (newTeacher && newTeacher.subjects && !newTeacher.subjects.includes(currentSubject)) {
-            subjectToSet = "";
-        }
-        onUpdateSchedule(rowIndex, colIndex, newTeacherId, subjectToSet);
+      onUpdateSchedule(rowIndex, colIndex, newTeacherId, currentSubject);
     };
-    
+
     const handleSubjectChange = (newSubject) => {
-        const currentTeacher = teachers.find(t => t._id === currentTeacherId);
-        let teacherToSet = currentTeacherId;
-    
-        // UX Improvement: If the currently selected teacher cannot teach the new subject, clear the teacher.
-        if (currentTeacher && currentTeacher.subjects && !currentTeacher.subjects.includes(newSubject)) {
-            teacherToSet = "";
-        }
-        onUpdateSchedule(rowIndex, colIndex, teacherToSet, newSubject);
+      onUpdateSchedule(rowIndex, colIndex, currentTeacherId, newSubject);
     };
 
     return (
@@ -215,7 +172,7 @@ const ClassroomScheduleTable = ({
         <CustomTeacherDropdown
           value={currentTeacherId}
           onChange={handleTeacherChange}
-          teachers={sortedTeachers} // Pass the dynamically filtered and sorted teachers
+          teachers={sortedTeachers} // Pass only the available teachers to the dropdown
           rowIndex={rowIndex}
           colIndex={colIndex}
         />
@@ -236,7 +193,7 @@ const ClassroomScheduleTable = ({
 
         {/* Display the count of available teachers */}
         <div className="text-xs text-gray-500 pt-1 text-center">
-          {sortedTeachers.length} teacher{sortedTeachers.length !== 1 ? "s" : ""} available
+          {availableTeachers.length} teacher{availableTeachers.length !== 1 ? "s" : ""} available
         </div>
       </div>
     );
@@ -278,7 +235,6 @@ const ClassroomScheduleTable = ({
                 <td className="border px-4 py-2 font-semibold bg-gray-100 align-middle">{days[rowIndex]}</td>
                 {row.map((cell, colIndex) => (
                   <td key={`${rowIndex}-${colIndex}`} className="border p-2 text-center align-top">
-                    {/* The call to renderCell doesn't need to be changed here as it's in the component's scope */}
                     {renderCell(cell, rowIndex, colIndex)}
                   </td>
                 ))}
