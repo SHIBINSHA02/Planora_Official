@@ -5,18 +5,17 @@ const EventEmitter = require('events');
 const teacherEmitter = new EventEmitter();
 exports.teacherEmitter = teacherEmitter;
 
+const Counter = require('../models/counter');
 
 const generateTeacherId = async () => {
-  const lastTeacher = await Teacher.findOne({})
-    .sort({ createdAt: -1 }) // safer chronological sort
-    .lean();
+  const counter = await Counter.findOneAndUpdate(
+    { _id: 'teacherid' },               // Identify the sequence
+    { $inc: { sequence_value: 1 } },    // Atomically increment
+    { new: true, upsert: true }         // Create if doesn't exist
+  );
 
-  if (!lastTeacher) return "T-101";
-
-  const lastNumber = parseInt(lastTeacher.teacherid.replace('T-', '')) || 100;
-  return `T-${lastNumber + 1}`;
+  return `T-${counter.sequence_value}`;
 };
-
 
 // POST /api/teachers - Create a new teacher
 exports.createTeacher = async (req, res) => {
