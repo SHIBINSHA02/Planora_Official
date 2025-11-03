@@ -26,11 +26,8 @@ const classroomSchema = new mongoose.Schema({
       time: { type: Number, required: true },
     }
   ],
-   schedule: {
-    type: [[{
-      type: [scheduleSlotSchema],
-      default: undefined
-    }]],
+    schedule: {
+    type: [[ [scheduleSlotSchema] ]], // This now correctly defines a 2D array of [scheduleSlotSchema]
     default: () => Array.from({ length: 5 }, () => Array(6).fill([]))
   }
 });

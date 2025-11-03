@@ -1,5 +1,3 @@
-// frontend/src/Components/Classroom/classroom.jsx
-// frontend/src/Components/Classroom/Classroom.jsx
 import React, { useState, useEffect, useCallback } from "react";
 import ClassroomScheduleView from "./ClassroomScheduleView.jsx";
 import ErrorBoundary from "./ErrorBoundary.jsx";
@@ -36,6 +34,7 @@ const Classroom = () => {
 
   const fetchTeachers = useCallback(async () => {
     try {
+      // Make sure your /api/teachers endpoint returns the 'teacherid' field for each teacher
       const response = await teacherApiClient.get("/");
       setTeachers(response.data || []);
     } catch (err) {
@@ -60,62 +59,49 @@ const Classroom = () => {
     }
   }, [classSchedules]);
 
-  const handleUpdateSchedule = async (classroomId, dayIndex, periodIndex, newTeacherMongoId, subject) => {
+  const handleUpdateSchedule = async (classroomId, dayIndex, periodIndex, updatedAssignmentsArray) => {
     const originalClassroomSchedule = classSchedules[classroomId];
     const originalTeachersState = teachers;
     if (!originalClassroomSchedule) return;
 
-    const oldAssignment = (originalClassroomSchedule[dayIndex][periodIndex] || [])[0];
-    const oldTeacherMongoId = oldAssignment ? oldAssignment.teacher_id : null;
+    const newUiSchedule = JSON.parse(JSON.stringify(originalClassroomSchedule));
+    newUiSchedule[dayIndex][periodIndex] = updatedAssignmentsArray;
 
-    if (oldTeacherMongoId === newTeacherMongoId && oldAssignment?.subject === subject) return;
-
-    const updatedTeachers = originalTeachersState.map(teacher => {
-      // Case 1: This teacher is being assigned or updated in the slot.
-      if (teacher._id === newTeacherMongoId) {
+    const updatedTeachers = originalTeachersState.map((teacher) => {
         const newGrid = JSON.parse(JSON.stringify(teacher.schedule_grid));
-        const currentClassroom = classrooms.find(c => c.classroom_id === classroomId);
-        
-        newGrid[dayIndex][periodIndex] = {
-          classroomId: classroomId,
-          classroomName: currentClassroom?.classname || 'Unknown',
-          subject: subject || 'Unassigned'
-        };
-        return { ...teacher, schedule_grid: newGrid };
-      }
-      // Case 2: This teacher is being removed from the slot.
-      if (teacher._id === oldTeacherMongoId) {
-        const newGrid = JSON.parse(JSON.stringify(teacher.schedule_grid));
+        const currentClassroom = classrooms.find((c) => c.classroom_id === classroomId);
         newGrid[dayIndex][periodIndex] = null;
+        const teacherAssignment = updatedAssignmentsArray.find((a) => a.teacher_id === teacher._id);
+        if (teacherAssignment) {
+            newGrid[dayIndex][periodIndex] = {
+                classroomId: classroomId,
+                classroomName: currentClassroom?.classname || "Unknown",
+                subject: teacherAssignment.subject || "Unassigned",
+            };
+        }
         return { ...teacher, schedule_grid: newGrid };
-      }
-      return teacher;
     });
 
-    const newClassroomSchedule = JSON.parse(JSON.stringify(originalClassroomSchedule));
-    newClassroomSchedule[dayIndex][periodIndex] = (!newTeacherMongoId && !subject) ? [] : [{ teacher_id: newTeacherMongoId || null, subject: subject || null }];
-
-    setClassSchedules(prev => ({ ...prev, [classroomId]: newClassroomSchedule }));
+    setClassSchedules((prev) => ({ ...prev, [classroomId]: newUiSchedule }));
     setTeachers(updatedTeachers);
 
     try {
-      const apiPromises = [];
-      apiPromises.push(classroomApiClient.put(`/${classroomId}`, { schedule: newClassroomSchedule }));
+      const validAssignments = updatedAssignmentsArray.filter(
+        (assignment) => assignment.teacher_id && assignment.subject
+      );
       
-      const oldTeacher = originalTeachersState.find(t => t._id === oldTeacherMongoId);
-      const newTeacher = originalTeachersState.find(t => t._id === newTeacherMongoId);
+      const backendSchedule = JSON.parse(JSON.stringify(originalClassroomSchedule));
+      backendSchedule[dayIndex][periodIndex] = validAssignments;
 
-      if (oldTeacher) {
-        const updatedOldTeacher = updatedTeachers.find(t => t._id === oldTeacherMongoId);
-        apiPromises.push(teacherApiClient.put(`/${oldTeacher.teacherid}`, { schedule_grid: updatedOldTeacher.schedule_grid }));
-      }
+      const apiPromises = [];
+      apiPromises.push(classroomApiClient.put(`/${classroomId}`, { schedule: backendSchedule }));
       
-      if (newTeacher && newTeacherMongoId !== oldTeacherMongoId) {
-        const updatedNewTeacher = updatedTeachers.find(t => t._id === newTeacherMongoId);
-        apiPromises.push(teacherApiClient.put(`/${newTeacher.teacherid}`, { schedule_grid: updatedNewTeacher.schedule_grid }));
-      } else if (newTeacher && newTeacherMongoId === oldTeacherMongoId) {
-         const updatedTeacher = updatedTeachers.find(t => t._id === newTeacherMongoId);
-         apiPromises.push(teacherApiClient.put(`/${updatedTeacher.teacherid}`, { schedule_grid: updatedTeacher.schedule_grid }));
+      for (const assignment of validAssignments) {
+        const teacherToUpdate = updatedTeachers.find((t) => t._id === assignment.teacher_id);
+        if (teacherToUpdate && teacherToUpdate.teacherid) { // Ensure teacherid exists
+          // ✅ FINAL FIX: The backend route for teachers uses 'teacherid', not '_id'.
+          apiPromises.push(teacherApiClient.put(`/${teacherToUpdate.teacherid}`, { schedule_grid: teacherToUpdate.schedule_grid }));
+        }
       }
       
       await Promise.all(apiPromises);
@@ -123,7 +109,7 @@ const Classroom = () => {
     } catch (err) {
       console.error("❌ Synchronization Failed:", err);
       setError("Failed to save changes. Reverting.");
-      setClassSchedules(prev => ({ ...prev, [classroomId]: originalClassroomSchedule }));
+      setClassSchedules((prev) => ({ ...prev, [classroomId]: originalClassroomSchedule }));
       setTeachers(originalTeachersState);
     }
   };
@@ -140,13 +126,17 @@ const Classroom = () => {
   return (
     <ErrorBoundary>
       <div className="p-4 md:p-6 lg:p-8">
-      
         {loading && <p className="text-center p-4 text-blue-500">Loading...</p>}
         {error && <p className="text-red-500 bg-red-100 p-3 rounded-md my-4">{error}</p>}
+
         <div className="mb-6">
-          <label htmlFor="classroom-select" className="block text-lg font-semibold mb-2 text-gray-700">
+          <label
+            htmlFor="classroom-select"
+            className="block text-lg font-semibold mb-2 text-gray-700"
+          >
             Select a Classroom:
           </label>
+
           {classrooms.length > 0 ? (
             <select
               id="classroom-select"
@@ -156,11 +146,16 @@ const Classroom = () => {
               disabled={loading}
             >
               {classrooms.map((cls) => (
-                <option key={cls._id} value={cls.classroom_id}>{cls.classname}</option>
+                <option key={cls._id} value={cls.classroom_id}>
+                  {cls.classname}
+                </option>
               ))}
             </select>
-          ) : (!loading && <p className="text-gray-500">No classrooms available to select.</p>)}
+          ) : (
+            !loading && <p className="text-gray-500">No classrooms available to select.</p>
+          )}
         </div>
+
         {selectedClassroom && !error && classSchedules[selectedClassroom] && (
           <ClassroomScheduleView
             classrooms={classrooms}
