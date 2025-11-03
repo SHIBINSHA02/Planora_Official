@@ -1,3 +1,4 @@
+// frontend/src/Components/Classroom/classroom.jsx
 import React, { useState, useEffect, useCallback } from "react";
 import ClassroomScheduleView from "./ClassroomScheduleView.jsx";
 import ErrorBoundary from "./ErrorBoundary.jsx";
@@ -34,7 +35,6 @@ const Classroom = () => {
 
   const fetchTeachers = useCallback(async () => {
     try {
-      // Make sure your /api/teachers endpoint returns the 'teacherid' field for each teacher
       const response = await teacherApiClient.get("/");
       setTeachers(response.data || []);
     } catch (err) {
@@ -64,44 +64,58 @@ const Classroom = () => {
     const originalTeachersState = teachers;
     if (!originalClassroomSchedule) return;
 
+    // Filter for valid assignments FIRST. This is crucial.
+    const validAssignments = updatedAssignmentsArray.filter(
+      (assignment) => assignment.teacher_id && assignment.subject
+    );
+    
+    // For the UI, we show the user's intent, including empty slots
     const newUiSchedule = JSON.parse(JSON.stringify(originalClassroomSchedule));
     newUiSchedule[dayIndex][periodIndex] = updatedAssignmentsArray;
 
+    // Build the updatedTeachers array, which will be used for both UI state and the backend payload
     const updatedTeachers = originalTeachersState.map((teacher) => {
         const newGrid = JSON.parse(JSON.stringify(teacher.schedule_grid));
         const currentClassroom = classrooms.find((c) => c.classroom_id === classroomId);
-        newGrid[dayIndex][periodIndex] = null;
-        const teacherAssignment = updatedAssignmentsArray.find((a) => a.teacher_id === teacher._id);
-        if (teacherAssignment) {
-            newGrid[dayIndex][periodIndex] = {
+        
+        newGrid[dayIndex][periodIndex] = null; // Clear the slot
+
+        // ✅ FINAL FIX: Use the 'validAssignments' array to build the teacher's schedule grid.
+        // This prevents incomplete assignments from being sent to the teacher API.
+        const assignmentsForThisTeacher = validAssignments.filter(
+            (a) => a.teacher_id === teacher._id
+        );
+
+        if (assignmentsForThisTeacher.length > 0) {
+            newGrid[dayIndex][periodIndex] = assignmentsForThisTeacher.map(assignment => ({
                 classroomId: classroomId,
                 classroomName: currentClassroom?.classname || "Unknown",
-                subject: teacherAssignment.subject || "Unassigned",
-            };
+                subject: assignment.subject,
+            }));
         }
+
         return { ...teacher, schedule_grid: newGrid };
     });
 
+    // Update the UI state optimistically
     setClassSchedules((prev) => ({ ...prev, [classroomId]: newUiSchedule }));
     setTeachers(updatedTeachers);
 
     try {
-      const validAssignments = updatedAssignmentsArray.filter(
-        (assignment) => assignment.teacher_id && assignment.subject
-      );
-      
+      // For the backend classroom payload, use the valid assignments
       const backendSchedule = JSON.parse(JSON.stringify(originalClassroomSchedule));
       backendSchedule[dayIndex][periodIndex] = validAssignments;
 
       const apiPromises = [];
       apiPromises.push(classroomApiClient.put(`/${classroomId}`, { schedule: backendSchedule }));
       
-      for (const assignment of validAssignments) {
-        const teacherToUpdate = updatedTeachers.find((t) => t._id === assignment.teacher_id);
-        if (teacherToUpdate && teacherToUpdate.teacherid) { // Ensure teacherid exists
-          // ✅ FINAL FIX: The backend route for teachers uses 'teacherid', not '_id'.
-          apiPromises.push(teacherApiClient.put(`/${teacherToUpdate.teacherid}`, { schedule_grid: teacherToUpdate.schedule_grid }));
-        }
+      // Find the unique teachers that were part of the valid assignments to update
+      const uniqueTeacherIds = [...new Set(validAssignments.map(a => a.teacher_id))];
+      for (const teacherId of uniqueTeacherIds) {
+          const teacherToUpdate = updatedTeachers.find((t) => t._id === teacherId);
+          if (teacherToUpdate && teacherToUpdate.teacherid) {
+            apiPromises.push(teacherApiClient.put(`/${teacherToUpdate.teacherid}`, { schedule_grid: teacherToUpdate.schedule_grid }));
+          }
       }
       
       await Promise.all(apiPromises);

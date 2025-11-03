@@ -1,21 +1,26 @@
-// frontend/src/Components/tables/TeacherScheduleTable.jsx
 import React from "react";
 
 const TeacherScheduleTable = ({ scheduleData, days, periods }) => {
   const renderCell = (cell) => {
-    // Check if cell is an array and has items
+    // This is the key logic. We check if 'cell' is a non-empty array.
+    // This correctly handles cases where a teacher has multiple classes in one period.
     if (Array.isArray(cell) && cell.length > 0) {
       return (
         <div className="space-y-1">
-          {cell.map((item, index) => (
-            <div key={index} className="bg-blue-100 p-2 rounded text-xs">
-              <div className="font-semibold text-blue-800">{item.classroomName}</div>
-              <div className="text-blue-600">{item.subject}</div>
+          {/* We map over every assignment object in the cell's array... */}
+          {cell.map((assignment, index) => (
+            // ...and render a separate block for each one.
+            // Using a unique key like `assignment.classroomId + assignment.subject` is slightly more robust.
+            <div key={`${assignment.classroomId}-${assignment.subject}-${index}`} className="bg-indigo-100 p-2 rounded text-xs text-left">
+              <div className="font-semibold text-indigo-800">{assignment.classroomName}</div>
+              <div className="text-indigo-600">{assignment.subject}</div>
             </div>
           ))}
         </div>
       );
     }
+
+    // If the cell is null, undefined, or an empty array, the teacher is free.
     return <div className="text-gray-400 text-xs">Free</div>;
   };
 
@@ -33,11 +38,13 @@ const TeacherScheduleTable = ({ scheduleData, days, periods }) => {
           </tr>
         </thead>
         <tbody>
+          {/* Ensure scheduleData is available before trying to map it */}
           {scheduleData &&
             scheduleData.map((row, rowIndex) => (
               <tr key={rowIndex} className={rowIndex % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                 <td className="border px-4 py-2 font-semibold bg-gray-100 align-middle">{days[rowIndex]}</td>
-                {row.map((cell, colIndex) => (
+                {/* Ensure the row is an array before mapping */}
+                {Array.isArray(row) && row.map((cell, colIndex) => (
                   <td key={`${rowIndex}-${colIndex}`} className="border p-2 text-center align-top">
                     {renderCell(cell)}
                   </td>

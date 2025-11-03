@@ -1,3 +1,4 @@
+// frontend/src/Components/tables/ClassroomScheduleTable.jsx
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
@@ -12,8 +13,7 @@ const ClassroomScheduleTable = ({
   classroomSubjects = [],
   onUpdateSchedule,
 }) => {
-  const [isMultiSelect, setIsMultiSelect] = useState(false);
-  const [isMultiAssign, setIsMultiAssign] = useState(false);
+  
   const [hoveredTeacher, setHoveredTeacher] = useState(null);
   const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 });
 
@@ -243,28 +243,7 @@ const ClassroomScheduleTable = ({
   // ====================================================================================
   return (
     <div className="overflow-x-auto shadow-lg rounded-lg relative">
-      <div className="mb-4 flex space-x-4 p-4 bg-gray-50 border-b">
-        <button
-          onClick={() => setIsMultiSelect(!isMultiSelect)}
-          className={`px-4 py-2 text-sm font-medium rounded ${
-            isMultiSelect
-              ? "bg-indigo-600 text-white"
-              : "bg-gray-200 hover:bg-gray-300"
-          }`}
-        >
-          {isMultiSelect ? "Disable Multi-Teacher" : "Enable Multi-Teacher"}
-        </button>
-        <button
-          onClick={() => setIsMultiAssign(!isMultiAssign)}
-          className={`px-4 py-2 text-sm font-medium rounded ${
-            isMultiAssign
-              ? "bg-indigo-600 text-white"
-              : "bg-gray-200 hover:bg-gray-300"
-          }`}
-        >
-          {isMultiAssign ? "Disable Multi-Assign" : "Enable Multi-Assign"}
-        </button>
-      </div>
+      
 
       <table className="min-w-full border-collapse border border-gray-300">
         <thead>
