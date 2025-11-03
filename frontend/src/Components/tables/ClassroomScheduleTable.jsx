@@ -2,18 +2,16 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { TeacherScheduleGrid } from "./teachergrid"; // Make sure this component exists and is correctly imported
+import { TeacherScheduleGrid } from "./teachergrid";
 
 const ClassroomScheduleTable = ({
   scheduleData,
   days,
   periods,
   teachers = [],
-  // The 'subjects' prop is now used as a fallback if classroomSubjects is not provided
   subjects = [], 
-  // NEW PROP: Pass the subjects specific to this classroom
   classroomSubjects = [], 
-  onUpdateSchedule, // Callback to update the parent component's state
+  onUpdateSchedule, // Callback: (rowIndex, colIndex, teacherId, subject, teacherName) => void
 }) => {
   const [isMultiSelect, setIsMultiSelect] = useState(false);
   const [isMultiAssign, setIsMultiAssign] = useState(false);
@@ -21,27 +19,24 @@ const ClassroomScheduleTable = ({
   const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 });
 
   // ====================================================================================
-  // 🔹 FULL IMPLEMENTATION OF THE CUSTOM TEACHER DROPDOWN
-  // This component is nested because its logic is tightly coupled with the table's state.
+  // 🔹 CUSTOM TEACHER DROPDOWN
   // ====================================================================================
   const CustomTeacherDropdown = ({ value, onChange, teachers, rowIndex, colIndex }) => {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
-    const hoverTimeoutRef = useRef(null); // Ref to manage hover delay timer
-    const hideTimeoutRef = useRef(null); // Ref to manage hide delay timer
+    const hoverTimeoutRef = useRef(null);
+    const hideTimeoutRef = useRef(null);
 
-    // Effect to handle clicks outside the dropdown to close it
     useEffect(() => {
       const handleClickOutside = (event) => {
         if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
           setIsOpen(false);
-          setHoveredTeacher(null); // Clear any hovered teacher preview
+          setHoveredTeacher(null);
         }
       };
       document.addEventListener('mousedown', handleClickOutside);
       return () => {
         document.removeEventListener('mousedown', handleClickOutside);
-        // Clear timers on cleanup
         if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
         if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
       };
@@ -49,22 +44,20 @@ const ClassroomScheduleTable = ({
 
     const selectedTeacher = teachers.find(t => t._id === value);
 
-    // Show teacher's schedule on hover after a short delay
     const handleTeacherHover = (teacher, event) => {
       if (!isOpen) return;
       if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
       if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
 
       hoverTimeoutRef.current = setTimeout(() => {
-        if (isOpen) { // Double check if still open before showing
+        if (isOpen) {
           const rect = event.target.getBoundingClientRect();
           setHoveredTeacher({ ...teacher, currentDayIndex: rowIndex, currentPeriodIndex: colIndex });
           setHoverPosition({ x: rect.right + 10, y: rect.top });
         }
-      }, 700); // 700ms delay before showing
+      }, 700);
     };
 
-    // Hide teacher's schedule on mouse leave after a short delay
     const handleTeacherLeave = () => {
       if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
       hideTimeoutRef.current = setTimeout(() => {
@@ -72,18 +65,17 @@ const ClassroomScheduleTable = ({
       }, 200);
     };
 
-    // Handle selecting a teacher from the list
     const handleSelect = (teacherId) => {
-      setHoveredTeacher(null); // Clear hover preview
+      setHoveredTeacher(null);
       setIsOpen(false);
-      onChange(teacherId); // Trigger the parent's update logic
+      onChange(teacherId);
     };
 
     const handleDropdownToggle = (e) => {
       e.stopPropagation();
       setIsOpen(!isOpen);
       if (isOpen) {
-        setHoveredTeacher(null); // Clear hover if closing
+        setHoveredTeacher(null);
       }
     };
 
@@ -124,84 +116,80 @@ const ClassroomScheduleTable = ({
   };
 
   // ====================================================================================
-  // 🔹 CELL RENDERING LOGIC (UPDATED WITH DEPENDENT FILTERING)
-  // This function prepares the data for each cell, including filtering for available teachers.
+  // 🔹 CELL RENDERING LOGIC - UPDATED TO PASS TEACHER NAME
   // ====================================================================================
   const renderCell = (cell, rowIndex, colIndex) => {
-    // Determine the current assignment for this cell
     const assignment = (Array.isArray(cell) && cell.length > 0) ? cell[0] : {};
     const currentTeacherId = assignment.teacher_id || "";
     const currentSubject = assignment.subject || "";
 
-    // CRITICAL LOGIC: Filter teachers to show only those available for this specific slot.
     const baseAvailableTeachers = teachers.filter((teacher) => {
-      // A teacher is available if their schedule grid for this day/period is null.
       const isTeacherFree = teacher.schedule_grid?.[rowIndex]?.[colIndex] === null;
-      // Also, the teacher currently assigned to this slot should be considered available to allow re-selection or changes.
       const isCurrentlyAssigned = teacher._id === currentTeacherId;
       return isTeacherFree || isCurrentlyAssigned;
     });
 
-    // ====================================================================================
-    // 🔹 DEPENDENT DROPDOWN LOGIC
-    // ====================================================================================
     let filteredTeachers = baseAvailableTeachers;
-    // Use classroom-specific subjects if available, otherwise fall back to all subjects
     let filteredSubjects = classroomSubjects.length > 0 ? classroomSubjects : subjects;
 
-    // If a subject is selected, filter teachers to only those who can teach that subject.
     if (currentSubject) {
       filteredTeachers = baseAvailableTeachers.filter(
         (teacher) => teacher.subjects && teacher.subjects.includes(currentSubject)
       );
     }
 
-    // If a teacher is selected, filter subjects to only those taught by the teacher AND belonging to the classroom.
     if (currentTeacherId) {
       const selectedTeacher = teachers.find((t) => t._id === currentTeacherId);
       if (selectedTeacher && Array.isArray(selectedTeacher.subjects)) {
         const teacherSubjects = selectedTeacher.subjects;
-        // Find the intersection of the classroom's subjects and the teacher's subjects.
         filteredSubjects = filteredSubjects.filter((subject) =>
           teacherSubjects.includes(subject)
         );
       }
     }
 
-    // Sort the final filtered lists for consistent display
     const sortedTeachers = [...filteredTeachers].sort((a, b) => (a.teachername || "").localeCompare(b.teachername || ""));
     const sortedSubjects = [...filteredSubjects].sort((a, b) => a.localeCompare(b));
 
-    // Handlers that call the parent's `onUpdateSchedule` function
     const handleClear = () => {
-      onUpdateSchedule(rowIndex, colIndex, "", ""); // Clear both teacher and subject
+      // Pass empty strings for teacher_id, subject, and teacher_name
+      onUpdateSchedule(rowIndex, colIndex, "", "", "");
     };
 
     const handleTeacherChange = (newTeacherId) => {
-        const newTeacher = teachers.find(t => t._id === newTeacherId);
-        let subjectToSet = currentSubject;
-    
-        // UX Improvement: If the currently selected subject is not taught by the new teacher, clear the subject.
-        if (newTeacher && newTeacher.subjects && !newTeacher.subjects.includes(currentSubject)) {
-            subjectToSet = "";
+      const newTeacher = teachers.find(t => t._id === newTeacherId);
+      let subjectToSet = currentSubject;
+      let teacherNameToSet = "";
+
+      if (newTeacher) {
+        teacherNameToSet = newTeacher.teachername || "";
+        // Clear subject if new teacher doesn't teach it
+        if (newTeacher.subjects && !newTeacher.subjects.includes(currentSubject)) {
+          subjectToSet = "";
         }
-        onUpdateSchedule(rowIndex, colIndex, newTeacherId, subjectToSet);
+      }
+      
+      // CRITICAL: Pass teacher name as the 5th parameter
+      onUpdateSchedule(rowIndex, colIndex, newTeacherId, subjectToSet, teacherNameToSet);
     };
     
     const handleSubjectChange = (newSubject) => {
-        const currentTeacher = teachers.find(t => t._id === currentTeacherId);
-        let teacherToSet = currentTeacherId;
-    
-        // UX Improvement: If the currently selected teacher cannot teach the new subject, clear the teacher.
-        if (currentTeacher && currentTeacher.subjects && !currentTeacher.subjects.includes(newSubject)) {
-            teacherToSet = "";
-        }
-        onUpdateSchedule(rowIndex, colIndex, teacherToSet, newSubject);
+      const currentTeacher = teachers.find(t => t._id === currentTeacherId);
+      let teacherToSet = currentTeacherId;
+      let teacherNameToSet = currentTeacher?.teachername || "";
+
+      // Clear teacher if they can't teach the new subject
+      if (currentTeacher && currentTeacher.subjects && !currentTeacher.subjects.includes(newSubject)) {
+        teacherToSet = "";
+        teacherNameToSet = "";
+      }
+      
+      // CRITICAL: Pass teacher name as the 5th parameter
+      onUpdateSchedule(rowIndex, colIndex, teacherToSet, newSubject, teacherNameToSet);
     };
 
     return (
       <div className="space-y-2">
-        {/* The "Clear" button only appears if there is an assignment */}
         {(currentTeacherId || currentSubject) && (
           <button
             onClick={handleClear}
@@ -211,16 +199,14 @@ const ClassroomScheduleTable = ({
           </button>
         )}
 
-        {/* Teacher Dropdown */}
         <CustomTeacherDropdown
           value={currentTeacherId}
           onChange={handleTeacherChange}
-          teachers={sortedTeachers} // Pass the dynamically filtered and sorted teachers
+          teachers={sortedTeachers}
           rowIndex={rowIndex}
           colIndex={colIndex}
         />
 
-        {/* Subject Dropdown */}
         <select
           value={currentSubject}
           onChange={(e) => handleSubjectChange(e.target.value)}
@@ -234,7 +220,6 @@ const ClassroomScheduleTable = ({
           ))}
         </select>
 
-        {/* Display the count of available teachers */}
         <div className="text-xs text-gray-500 pt-1 text-center">
           {sortedTeachers.length} teacher{sortedTeachers.length !== 1 ? "s" : ""} available
         </div>
@@ -248,7 +233,6 @@ const ClassroomScheduleTable = ({
   return (
     <div className="overflow-x-auto shadow-lg rounded-lg relative">
       <div className="mb-4 flex space-x-4 p-4 bg-gray-50 border-b">
-        {/* These buttons are for future multi-select functionality and can be removed if not needed */}
         <button
           onClick={() => setIsMultiSelect(!isMultiSelect)}
           className={`px-4 py-2 text-sm font-medium rounded ${isMultiSelect ? "bg-indigo-600 text-white" : "bg-gray-200 hover:bg-gray-300"}`}
@@ -278,7 +262,6 @@ const ClassroomScheduleTable = ({
                 <td className="border px-4 py-2 font-semibold bg-gray-100 align-middle">{days[rowIndex]}</td>
                 {row.map((cell, colIndex) => (
                   <td key={`${rowIndex}-${colIndex}`} className="border p-2 text-center align-top">
-                    {/* The call to renderCell doesn't need to be changed here as it's in the component's scope */}
                     {renderCell(cell, rowIndex, colIndex)}
                   </td>
                 ))}
@@ -286,7 +269,6 @@ const ClassroomScheduleTable = ({
             ))}
         </tbody>
       </table>
-      {/* The hover grid overlay for previewing a teacher's schedule */}
       {hoveredTeacher && (
         <TeacherScheduleGrid
           teacher={hoveredTeacher}

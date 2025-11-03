@@ -7,6 +7,7 @@ const TEACHERS_API = `${API_BASE}/api/teachers`;
 const CLASSROOM_API = `${API_BASE}/api/classrooms`;
 
 // Utility: generate empty 5x6 schedule matrix
+// Each cell is an empty array ready to hold schedule slot objects
 const generateEmptySchedule = () => {
   const DAYS = 5;
   const PERIODS = 6;
@@ -111,6 +112,11 @@ const ClassOnboarding = () => {
       return;
     }
 
+    if (!selectedTeacher || !selectedTeacher._id) {
+      setSubmissionMessage({ type: "error", text: "Selected teacher not found in database." });
+      return;
+    }
+
     const isDuplicate = assignedTeachers.some(
       t => t.teacherName === trimmedTeacher && t.subject === trimmedSubject
     );
@@ -124,7 +130,7 @@ const ClassOnboarding = () => {
       ...prev,
       {
         teacherName: trimmedTeacher,
-        teacherId: selectedTeacher.teacherid,
+        teacherId: selectedTeacher._id, // CHANGED: Use _id from MongoDB instead of teacherid
         subject: trimmedSubject,
         count: numericCount,
       },
@@ -160,19 +166,25 @@ const ClassOnboarding = () => {
       return;
     }
 
+    // UPDATED: Format subjects array to match schema requirements
     const subjectsPayload = assignedTeachers.map(t => ({
       subject: t.subject,
       teachername: t.teacherName,
       time: Number(t.count),
     }));
 
+    // Generate a unique classroom ID
+    const classroomId = trimmedClass.toUpperCase().replace(/[^A-Z0-9]/g, "-") + "-" + Date.now();
+
     const payload = {
-      classroom_id: trimmedClass.toUpperCase().replace(/[^A-Z0-9]/g, "-") + "-ID",
+      classroom_id: classroomId,
       classname: trimmedClass,
       admin: trimmedAdmin,
       subjects: subjectsPayload,
-      schedule: generateEmptySchedule(),
+      schedule: generateEmptySchedule(), // Empty 5x6 array of arrays
     };
+
+    console.log("📤 Submitting payload:", JSON.stringify(payload, null, 2));
 
     try {
       setIsSubmitting(true);
@@ -192,7 +204,7 @@ const ClassOnboarding = () => {
         setAssignedTeachers([]);
         setSubmissionMessage({
           type: "success",
-          text: `Classroom created successfully! ID: ${result.classroom_id || payload.classroom_id}`,
+          text: `Classroom created successfully! ID: ${result.classroom_id || classroomId}`,
         });
       } else {
         setSubmissionMessage({
@@ -219,6 +231,7 @@ const ClassOnboarding = () => {
         return "bg-blue-100 text-blue-700 border-blue-400";
     }
   };
+
   // --- Render UI ---
   return (
     <div className="p-6 max-w-2xl mx-auto bg-gray-50 rounded-xl shadow-lg">
@@ -353,7 +366,7 @@ const ClassOnboarding = () => {
                     className="flex justify-between items-center p-3 text-sm hover:bg-gray-50"
                   >
                     <span className="font-medium text-gray-800">
-                      {t.teacherName} (ID: {t.teacherId})
+                      {t.teacherName}
                     </span>
                     <span className="text-gray-600">
                       teaches <strong className="text-indigo-600">{t.subject}</strong> for{" "}

@@ -17,13 +17,17 @@ const getTeacherAvailabilityGrid = (teacher, currentDayIndex, currentPeriodIndex
   for (let d = 0; d < days.length; d++) {
     for (let p = 0; p < periods.length; p++) {
       const slotData = teacherSchedule[d]?.[p];
-      const isBooked = slotData !== null && typeof slotData === 'object';
+      
+      // Check if slot contains an array of schedule items (new schema)
+      const hasScheduleItems = Array.isArray(slotData) && slotData.length > 0;
+      const isBooked = hasScheduleItems;
       
       grid[d][p] = { 
         isBooked: isBooked,
         isCurrentSlot: d === currentDayIndex && p === currentPeriodIndex,
-        classroomName: isBooked ? slotData.classroomName : null,
-        subject: isBooked ? slotData.subject : null,
+        // If there are multiple classes in the same slot, display the first one
+        classroomName: isBooked ? slotData[0].classroomName : null,
+        subject: isBooked ? slotData[0].subject : null,
       };
     }
   }
@@ -73,8 +77,6 @@ export const TeacherScheduleGrid = ({ teacher, position, currentDayIndex, curren
                     className={`border p-1 text-xs h-16 ${slot.isCurrentSlot ? 'ring-2 ring-blue-500 ring-inset' : ''} ${!slot.isBooked ? 'bg-green-50' : 'bg-blue-50'}`}
                   >
                     {slot.isBooked ? (
-                      // --- THIS IS THE CRITICAL DISPLAY FIX ---
-                      // It now correctly displays both classroomName and subject from the slot data.
                       <div className="flex flex-col justify-center h-full">
                         <strong className="text-blue-800 truncate">{slot.classroomName || 'Unknown Class'}</strong>
                         <span className="text-gray-600 truncate">{slot.subject || 'No Subject'}</span>

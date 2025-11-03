@@ -1,15 +1,18 @@
 // frontend/src/Components/tables/TeacherScheduleTable.jsx
-// frontend/src/Components/tables/TeacherScheduleTable.jsx
 import React from "react";
 
 const TeacherScheduleTable = ({ scheduleData, days, periods }) => {
   const renderCell = (cell) => {
-    if (cell) {
+    // Check if cell is an array and has items
+    if (Array.isArray(cell) && cell.length > 0) {
       return (
-        <div className="bg-blue-100 p-2 rounded text-xs">
-          <div className="font-semibold text-blue-800">{cell.classroomName}</div>
-          <div className="text-blue-600">{cell.subject}</div>
-          <div className="text-blue-500">{cell.grade}</div>
+        <div className="space-y-1">
+          {cell.map((item, index) => (
+            <div key={index} className="bg-blue-100 p-2 rounded text-xs">
+              <div className="font-semibold text-blue-800">{item.classroomName}</div>
+              <div className="text-blue-600">{item.subject}</div>
+            </div>
+          ))}
         </div>
       );
     }
