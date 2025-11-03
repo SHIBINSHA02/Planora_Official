@@ -26,10 +26,12 @@ const classroomSchema = new mongoose.Schema({
       time: { type: Number, required: true },
     }
   ],
-  schedule: {
-    type: Array, // Array of days, each day is array of periods
-    required: true,
-    default: Array(5).fill(Array(6).fill([]))
+   schedule: {
+    type: [[{
+      type: [scheduleSlotSchema],
+      default: undefined
+    }]],
+    default: () => Array.from({ length: 5 }, () => Array(6).fill([]))
   }
 });
 

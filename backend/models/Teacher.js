@@ -1,6 +1,21 @@
 // backend/models/Teacher.js
 const mongoose = require('mongoose');
 
+const ScheduleItemSchema = new mongoose.Schema({
+  classroomId: {
+    type: String,
+    required: true
+  },
+  classroomName: {
+    type: String,
+    required: true
+  },
+  subject: {
+    type: String,
+    required: true
+  }
+}, { _id: false }); // Disable automatic _id inside subdocument array
+
 const TeacherSchema = new mongoose.Schema({
     teacherid: {
         type: String,
@@ -26,7 +41,10 @@ const TeacherSchema = new mongoose.Schema({
     schedule_grid: {
       
        
-        type: [[mongoose.Schema.Types.Mixed]],
+        type: [[{
+            type: [ScheduleItemSchema],
+            default: undefined
+        }]],
         default: () => Array.from({ length: 5 }, () => Array(6).fill(null))
     }
 });
