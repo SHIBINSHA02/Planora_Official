@@ -1,4 +1,3 @@
-// frontend/src/Components/Classroom/classroom.jsx
 import React, { useState, useEffect, useCallback } from "react";
 import ClassroomScheduleView from "./ClassroomScheduleView.jsx";
 import ErrorBoundary from "./ErrorBoundary.jsx";
@@ -64,52 +63,58 @@ const Classroom = () => {
     const originalTeachersState = teachers;
     if (!originalClassroomSchedule) return;
 
-    // Filter for valid assignments FIRST. This is crucial.
     const validAssignments = updatedAssignmentsArray.filter(
       (assignment) => assignment.teacher_id && assignment.subject
     );
     
-    // For the UI, we show the user's intent, including empty slots
     const newUiSchedule = JSON.parse(JSON.stringify(originalClassroomSchedule));
     newUiSchedule[dayIndex][periodIndex] = updatedAssignmentsArray;
 
-    // Build the updatedTeachers array, which will be used for both UI state and the backend payload
     const updatedTeachers = originalTeachersState.map((teacher) => {
         const newGrid = JSON.parse(JSON.stringify(teacher.schedule_grid));
         const currentClassroom = classrooms.find((c) => c.classroom_id === classroomId);
+
+        // ✅ FINAL FIX: RECONCILE SCHEDULES
+        // 1. Get the teacher's existing assignments in the slot, if any.
+        const existingAssignmentsInSlot = teacher.schedule_grid[dayIndex][periodIndex] || [];
         
-        newGrid[dayIndex][periodIndex] = null; // Clear the slot
+        // 2. Preserve assignments from OTHER classrooms by filtering out the current one.
+        const assignmentsFromOtherClasses = Array.isArray(existingAssignmentsInSlot)
+            ? existingAssignmentsInSlot.filter(asgn => asgn.classroomId !== classroomId)
+            : [];
 
-        // ✅ FINAL FIX: Use the 'validAssignments' array to build the teacher's schedule grid.
-        // This prevents incomplete assignments from being sent to the teacher API.
-        const assignmentsForThisTeacher = validAssignments.filter(
-            (a) => a.teacher_id === teacher._id
-        );
-
-        if (assignmentsForThisTeacher.length > 0) {
-            newGrid[dayIndex][periodIndex] = assignmentsForThisTeacher.map(assignment => ({
+        // 3. Get the new, valid assignments for this teacher from the CURRENT classroom edit.
+        const newAssignmentsFromCurrentClass = validAssignments
+            .filter(a => a.teacher_id === teacher._id)
+            .map(assignment => ({
                 classroomId: classroomId,
                 classroomName: currentClassroom?.classname || "Unknown",
                 subject: assignment.subject,
             }));
+
+        // 4. Combine assignments from other classes with the new ones from this class.
+        const combinedAssignments = [...assignmentsFromOtherClasses, ...newAssignmentsFromCurrentClass];
+
+        // 5. Update the grid slot with the reconciled data.
+        if (combinedAssignments.length > 0) {
+            newGrid[dayIndex][periodIndex] = combinedAssignments;
+        } else {
+            newGrid[dayIndex][periodIndex] = null; // Set to null if the slot becomes empty.
         }
 
         return { ...teacher, schedule_grid: newGrid };
     });
 
-    // Update the UI state optimistically
     setClassSchedules((prev) => ({ ...prev, [classroomId]: newUiSchedule }));
     setTeachers(updatedTeachers);
 
     try {
-      // For the backend classroom payload, use the valid assignments
       const backendSchedule = JSON.parse(JSON.stringify(originalClassroomSchedule));
       backendSchedule[dayIndex][periodIndex] = validAssignments;
 
       const apiPromises = [];
       apiPromises.push(classroomApiClient.put(`/${classroomId}`, { schedule: backendSchedule }));
       
-      // Find the unique teachers that were part of the valid assignments to update
       const uniqueTeacherIds = [...new Set(validAssignments.map(a => a.teacher_id))];
       for (const teacherId of uniqueTeacherIds) {
           const teacherToUpdate = updatedTeachers.find((t) => t._id === teacherId);
@@ -156,7 +161,7 @@ const Classroom = () => {
               id="classroom-select"
               value={selectedClassroom}
               onChange={(e) => setSelectedClassroom(e.target.value)}
-              className="block w-full md:w-1/2 lg:w-1/3 p-2 border border-gray-300 rounded-md shadow-sm"
+              className="block w-full md:w-1-2 lg:w-1/3 p-2 border border-gray-300 rounded-md shadow-sm"
               disabled={loading}
             >
               {classrooms.map((cls) => (

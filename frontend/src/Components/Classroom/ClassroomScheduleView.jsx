@@ -1,3 +1,4 @@
+// frontend/src/Components/Classroom/ClassroomScheduleView.jsx
 import React from 'react';
 import PropTypes from 'prop-types';
 import ClassroomScheduleTable from '../tables/ClassroomScheduleTable';
