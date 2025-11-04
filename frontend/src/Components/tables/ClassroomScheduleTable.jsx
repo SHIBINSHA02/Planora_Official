@@ -1,4 +1,3 @@
-// frontend/src/Components/tables/ClassroomScheduleTable.jsx
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
@@ -146,10 +145,16 @@ const ClassroomScheduleTable = ({
   const handleTeacherChange = (rowIndex, colIndex, index, newTeacherId) => {
     const updatedCell = [...(scheduleData[rowIndex][colIndex] || [])];
     const newTeacher = teachers.find((t) => t._id === newTeacherId);
+
+    // ✅ FIX: Also reset the subject if the new teacher cannot teach the selected one
+    const currentSubject = updatedCell[index].subject;
+    const isSubjectValid = newTeacher?.subjects?.includes(currentSubject);
+
     updatedCell[index] = {
       ...updatedCell[index],
       teacher_id: newTeacherId,
       teacher_name: newTeacher ? newTeacher.teachername : "",
+      subject: isSubjectValid ? currentSubject : "", // Reset subject if invalid
     };
     onUpdateSchedule(rowIndex, colIndex, updatedCell);
   };
@@ -168,8 +173,6 @@ const ClassroomScheduleTable = ({
   // ====================================================================================
   const renderCell = (cell, rowIndex, colIndex) => {
     const assignments = Array.isArray(cell) ? cell : [];
-    const filteredSubjects =
-      classroomSubjects.length > 0 ? classroomSubjects : subjects;
 
     return (
       <div className="space-y-2">
@@ -177,12 +180,34 @@ const ClassroomScheduleTable = ({
           const currentTeacherId = assignment.teacher_id || "";
           const currentSubject = assignment.subject || "";
 
-          const sortedTeachers = [...teachers].sort((a, b) =>
+          // ✅ START: Filtering Logic
+          // 1. Filter teachers based on the currently selected subject.
+          const availableTeachers = currentSubject
+            ? teachers.filter(
+                (teacher) =>
+                  teacher.subjects && teacher.subjects.includes(currentSubject)
+              )
+            : teachers; // If no subject, all teachers are available.
+
+          const sortedTeachers = [...availableTeachers].sort((a, b) =>
             (a.teachername || "").localeCompare(b.teachername || "")
           );
-          const sortedSubjects = [...filteredSubjects].sort((a, b) =>
+
+          // 2. Filter subjects based on the currently selected teacher.
+          const selectedTeacher = teachers.find((t) => t._id === currentTeacherId);
+          const baseSubjects =
+            classroomSubjects.length > 0 ? classroomSubjects : subjects;
+
+          const availableSubjects = selectedTeacher?.subjects
+            ? baseSubjects.filter((subject) =>
+                selectedTeacher.subjects.includes(subject)
+              )
+            : baseSubjects; // If no teacher, all classroom subjects are available.
+
+          const sortedSubjects = [...availableSubjects].sort((a, b) =>
             a.localeCompare(b)
           );
+          // ✅ END: Filtering Logic
 
           return (
             <div key={index} className="border rounded-md p-2 mb-2 bg-gray-50">
@@ -191,7 +216,7 @@ const ClassroomScheduleTable = ({
                 onChange={(newTeacherId) =>
                   handleTeacherChange(rowIndex, colIndex, index, newTeacherId)
                 }
-                teachers={sortedTeachers}
+                teachers={sortedTeachers} // Use filtered list
                 rowIndex={rowIndex}
                 colIndex={colIndex}
               />
@@ -204,8 +229,7 @@ const ClassroomScheduleTable = ({
                 className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
               >
                 <option value="">Select Subject</option>
-                {/* ✅ KEY FIX: Use index to create a unique key */}
-                {sortedSubjects.map((subject, idx) => (
+                {sortedSubjects.map((subject, idx) => ( // Use filtered list
                   <option key={`${subject}-${idx}`} value={subject}>
                     {subject}
                   </option>

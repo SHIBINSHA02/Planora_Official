@@ -1,3 +1,4 @@
+// frontend/src/Components/Classroom/classroom.jsx
 import React, { useState, useEffect, useCallback } from "react";
 import ClassroomScheduleView from "./ClassroomScheduleView.jsx";
 import ErrorBoundary from "./ErrorBoundary.jsx";
@@ -17,6 +18,7 @@ const Classroom = () => {
   const classroomApiClient = axios.create({ baseURL: CLASSROOM_API_URL });
   const teacherApiClient = axios.create({ baseURL: TEACHER_API_URL });
 
+  // ... (fetchClassrooms, fetchTeachers, fetchSchedule functions remain unchanged)
   const fetchClassrooms = useCallback(async () => {
     try {
       const response = await classroomApiClient.get("/");
@@ -58,6 +60,7 @@ const Classroom = () => {
     }
   }, [classSchedules]);
 
+
   const handleUpdateSchedule = async (classroomId, dayIndex, periodIndex, updatedAssignmentsArray) => {
     const originalClassroomSchedule = classSchedules[classroomId];
     const originalTeachersState = teachers;
@@ -73,17 +76,10 @@ const Classroom = () => {
     const updatedTeachers = originalTeachersState.map((teacher) => {
         const newGrid = JSON.parse(JSON.stringify(teacher.schedule_grid));
         const currentClassroom = classrooms.find((c) => c.classroom_id === classroomId);
-
-        // ✅ FINAL FIX: RECONCILE SCHEDULES
-        // 1. Get the teacher's existing assignments in the slot, if any.
         const existingAssignmentsInSlot = teacher.schedule_grid[dayIndex][periodIndex] || [];
-        
-        // 2. Preserve assignments from OTHER classrooms by filtering out the current one.
         const assignmentsFromOtherClasses = Array.isArray(existingAssignmentsInSlot)
             ? existingAssignmentsInSlot.filter(asgn => asgn.classroomId !== classroomId)
             : [];
-
-        // 3. Get the new, valid assignments for this teacher from the CURRENT classroom edit.
         const newAssignmentsFromCurrentClass = validAssignments
             .filter(a => a.teacher_id === teacher._id)
             .map(assignment => ({
@@ -91,17 +87,12 @@ const Classroom = () => {
                 classroomName: currentClassroom?.classname || "Unknown",
                 subject: assignment.subject,
             }));
-
-        // 4. Combine assignments from other classes with the new ones from this class.
         const combinedAssignments = [...assignmentsFromOtherClasses, ...newAssignmentsFromCurrentClass];
-
-        // 5. Update the grid slot with the reconciled data.
         if (combinedAssignments.length > 0) {
             newGrid[dayIndex][periodIndex] = combinedAssignments;
         } else {
-            newGrid[dayIndex][periodIndex] = null; // Set to null if the slot becomes empty.
+            newGrid[dayIndex][periodIndex] = null;
         }
-
         return { ...teacher, schedule_grid: newGrid };
     });
 
@@ -115,9 +106,21 @@ const Classroom = () => {
       const apiPromises = [];
       apiPromises.push(classroomApiClient.put(`/${classroomId}`, { schedule: backendSchedule }));
       
-      const uniqueTeacherIds = [...new Set(validAssignments.map(a => a.teacher_id))];
-      for (const teacherId of uniqueTeacherIds) {
+      // ✅ FINAL FIX IS HERE: Determine ALL teachers who were affected.
+      // 1. Get teachers from the ORIGINAL state of the slot.
+      const originalAssignments = originalClassroomSchedule[dayIndex][periodIndex] || [];
+      const originalTeacherIds = originalAssignments.map(a => a.teacher_id);
+      
+      // 2. Get teachers from the NEW state of the slot.
+      const newTeacherIds = validAssignments.map(a => a.teacher_id);
+
+      // 3. Combine them and get a unique list of every teacher whose schedule might have changed.
+      const allAffectedTeacherIds = [...new Set([...originalTeacherIds, ...newTeacherIds])];
+      
+      // 4. Loop through this complete list to send updates.
+      for (const teacherId of allAffectedTeacherIds) {
           const teacherToUpdate = updatedTeachers.find((t) => t._id === teacherId);
+          // The teacherToUpdate object already contains the correctly cleared or updated schedule grid.
           if (teacherToUpdate && teacherToUpdate.teacherid) {
             apiPromises.push(teacherApiClient.put(`/${teacherToUpdate.teacherid}`, { schedule_grid: teacherToUpdate.schedule_grid }));
           }
@@ -142,6 +145,7 @@ const Classroom = () => {
     if (selectedClassroom) fetchSchedule(selectedClassroom);
   }, [selectedClassroom, fetchSchedule]);
 
+  // ... (return statement with JSX remains unchanged)
   return (
     <ErrorBoundary>
       <div className="p-4 md:p-6 lg:p-8">
@@ -161,7 +165,7 @@ const Classroom = () => {
               id="classroom-select"
               value={selectedClassroom}
               onChange={(e) => setSelectedClassroom(e.target.value)}
-              className="block w-full md:w-1-2 lg:w-1/3 p-2 border border-gray-300 rounded-md shadow-sm"
+              className="block w-full md:w-1/2 lg:w-1/3 p-2 border border-gray-300 rounded-md shadow-sm"
               disabled={loading}
             >
               {classrooms.map((cls) => (
