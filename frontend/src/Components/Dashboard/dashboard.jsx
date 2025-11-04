@@ -18,8 +18,7 @@ const Dashboard = ({ initialTab = 'dashboard' }) => {
       <div className="max-w-7xl mx-auto">
         <nav className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <div className="flex items-center gap-3">
-            <img src="/logo.svg" alt="Logo" className="h-8 w-8" />
-            <span className="text-lg font-semibold text-gray-900">Planora</span>
+            <img src="/logo.svg" alt="Logo" className="h-16 w-16" />
           </div>
           <div className="flex items-center gap-6">
             <a
