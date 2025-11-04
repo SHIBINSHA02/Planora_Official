@@ -2,12 +2,12 @@
 import React, { useMemo, useCallback } from 'react';
 
 const getTeacherAvailabilityGrid = (teacher, currentDayIndex, currentPeriodIndex, days, periods) => {
+  // Initialize an empty grid with default values
   const grid = Array(days.length).fill(null).map(() => 
     Array(periods.length).fill(null).map(() => ({ 
       isBooked: false, 
       isCurrentSlot: false,
-      classroomName: null,
-      subject: null,
+      assignments: [], // ✅ CHANGED: Use an 'assignments' array instead of single properties
     }))
   );
   
@@ -18,16 +18,14 @@ const getTeacherAvailabilityGrid = (teacher, currentDayIndex, currentPeriodIndex
     for (let p = 0; p < periods.length; p++) {
       const slotData = teacherSchedule[d]?.[p];
       
-      // Check if slot contains an array of schedule items (new schema)
       const hasScheduleItems = Array.isArray(slotData) && slotData.length > 0;
       const isBooked = hasScheduleItems;
       
       grid[d][p] = { 
         isBooked: isBooked,
         isCurrentSlot: d === currentDayIndex && p === currentPeriodIndex,
-        // If there are multiple classes in the same slot, display the first one
-        classroomName: isBooked ? slotData[0].classroomName : null,
-        subject: isBooked ? slotData[0].subject : null,
+        // ✅ CHANGED: Store the entire slotData array if the teacher is booked
+        assignments: isBooked ? slotData : [],
       };
     }
   }
@@ -36,7 +34,7 @@ const getTeacherAvailabilityGrid = (teacher, currentDayIndex, currentPeriodIndex
 
 export const TeacherScheduleGrid = ({ teacher, position, currentDayIndex, currentPeriodIndex, setHoveredTeacher, days, periods }) => {
   const scheduleGrid = useMemo(() => getTeacherAvailabilityGrid(teacher, currentDayIndex, currentPeriodIndex, days, periods), [teacher, currentDayIndex, currentPeriodIndex, days, periods]);
-  const totalAssignments = useMemo(() => scheduleGrid.flat().filter(slot => slot.isBooked).length, [scheduleGrid]);
+  const totalAssignments = useMemo(() => scheduleGrid.flat().reduce((count, slot) => count + (slot.isBooked ? slot.assignments.length : 0), 0), [scheduleGrid]);
   const workloadStats = useMemo(() => {
     const totalSlots = days.length * periods.length;
     return { totalSlots, percentage: totalSlots > 0 ? Math.round((totalAssignments / totalSlots) * 100) : 0 };
@@ -74,12 +72,17 @@ export const TeacherScheduleGrid = ({ teacher, position, currentDayIndex, curren
                 return (
                   <td 
                     key={periodIndex} 
-                    className={`border p-1 text-xs h-16 ${slot.isCurrentSlot ? 'ring-2 ring-blue-500 ring-inset' : ''} ${!slot.isBooked ? 'bg-green-50' : 'bg-blue-50'}`}
+                    className={`border p-0.5 text-xs h-16 align-top ${slot.isCurrentSlot ? 'ring-2 ring-blue-500 ring-inset' : ''} ${!slot.isBooked ? 'bg-green-50' : 'bg-blue-50'}`}
                   >
+                    {/* ✅ CHANGED: Map over the assignments array to display all entries */}
                     {slot.isBooked ? (
-                      <div className="flex flex-col justify-center h-full">
-                        <strong className="text-blue-800 truncate">{slot.classroomName || 'Unknown Class'}</strong>
-                        <span className="text-gray-600 truncate">{slot.subject || 'No Subject'}</span>
+                      <div className="flex flex-col h-full overflow-y-auto">
+                        {slot.assignments.map((assignment, idx) => (
+                          <div key={idx} className="bg-blue-100 rounded p-1 mb-1 last:mb-0 text-left">
+                            <strong className="text-blue-800 block truncate leading-tight">{assignment.classroomName || 'Unknown Class'}</strong>
+                            <span className="text-gray-600 block truncate leading-tight">{assignment.subject || 'No Subject'}</span>
+                          </div>
+                        ))}
                       </div>
                     ) : (
                       <div className="flex items-center justify-center h-full text-gray-400">

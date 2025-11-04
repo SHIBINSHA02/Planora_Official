@@ -1,3 +1,4 @@
+// frontend/src/Components/tables/ClassroomScheduleTable.jsx
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";

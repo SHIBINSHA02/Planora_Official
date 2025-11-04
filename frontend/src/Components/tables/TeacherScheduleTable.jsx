@@ -1,3 +1,4 @@
+// frontend/src/Components/tables/TeacherScheduleTable.jsx
 import React from "react";
 
 const TeacherScheduleTable = ({ scheduleData, days, periods }) => {
