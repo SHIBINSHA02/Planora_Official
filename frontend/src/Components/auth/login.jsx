@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const DEFAULT_EMAIL = 'shibin24888@gmail.com';
+const DEFAULT_EMAIL = 'Email id';
 const DEFAULT_PASSWORD = 'password';
 
 const Login = ({ onLoggedIn }) => {

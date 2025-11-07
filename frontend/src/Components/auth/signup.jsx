@@ -1,3 +1,4 @@
+// frontend/src/Components/auth/signup.jsx
 import React, { useState } from 'react';
 
 const Signup = ({ onSignedUp }) => {
@@ -7,6 +8,8 @@ const Signup = ({ onSignedUp }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
 
+
+  
   const handleSubmit = (e) => {
     e.preventDefault();
     setError('');

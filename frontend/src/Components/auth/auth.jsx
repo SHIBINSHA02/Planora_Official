@@ -1,3 +1,4 @@
+// frontend/src/Components/auth/auth.jsx
 // Small helpers for navigation and auth
 export const navigateTo = (to) => {
   if (window.location.pathname === to) return;
