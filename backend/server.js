@@ -9,7 +9,7 @@ const auth =require('./routes/auth')
 const teacherRoutes = require('./routes/teacherRoutes');
 const classroomRoutes = require('./routes/classroomRoutes');
 const { teacherEmitter } = require('./controllers/teacherController');
-
+require('dotenv').config();
 const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;

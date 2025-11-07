@@ -1,80 +1,59 @@
 // frontend/src/Components/Dashboard/dashboard.jsx
-import React, { useEffect, useState } from 'react';
-import ClassOnboarding from './class_onboarding';
-import TeacherOnboarding from './teacher_onboarding';
-import DownloadPanel from './download_panel';
-import Teacher from '../Teacher/teacher';
-import Classroom from '../Classroom/classroom';
+import React from 'react';
+// Import components from React Router
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 
-const Dashboard = ({ initialTab = 'dashboard' }) => {
-  const [activeTab, setActiveTab] = useState(initialTab);
+// The Dashboard now accepts the `onLogout` prop from App.jsx
+const Dashboard = ({ onLogout }) => {
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    setActiveTab(initialTab);
-  }, [initialTab]);
+  // We no longer need the 'activeTab' state. The URL is the source of truth.
+  // We no longer need the 'initialTab' prop.
+
+  const handleLogoutClick = () => {
+    if (onLogout) {
+      onLogout(); // This clears localStorage and updates App state
+    }
+    navigate('/login'); // Redirect to the login page
+  };
+
+  // This function is used by NavLink to apply styles to the active link
+  const getNavLinkClass = ({ isActive }) =>
+    isActive ? 'text-indigo-600 font-semibold' : 'text-gray-600 hover:text-indigo-700';
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto">
-        <nav className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <nav className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white">
           <div className="flex items-center gap-3">
             <img src="/logo.svg" alt="Logo" className="h-16 w-16" />
           </div>
           <div className="flex items-center gap-6">
-            <a
-              className={`${activeTab === 'dashboard' ? 'text-indigo-600 font-semibold' : 'text-gray-600'} hover:text-indigo-700`}
-              href="/dashboard"
-              onClick={(e) => { e.preventDefault(); window.history.pushState({}, '', '/dashboard'); window.dispatchEvent(new PopStateEvent('popstate')); setActiveTab('dashboard'); }}
-            >
+            {/* Replace <a> tags with <NavLink> */}
+            <NavLink to="/dashboard" className={getNavLinkClass} end>
               Dashboard
-            </a>
-            <a
-              className={`${activeTab === 'classroom' ? 'text-indigo-600 font-semibold' : 'text-gray-600'} hover:text-indigo-700`}
-              href="/classroom"
-              onClick={(e) => { e.preventDefault(); window.history.pushState({}, '', '/classroom'); window.dispatchEvent(new PopStateEvent('popstate')); setActiveTab('classroom'); }}
-            >
+            </NavLink>
+            <NavLink to="/dashboard/classroom" className={getNavLinkClass}>
               Classroom
-            </a>
-            <a
-              className={`${activeTab === 'teacher' ? 'text-indigo-600 font-semibold' : 'text-gray-600'} hover:text-indigo-700`}
-              href="/teacher"
-              onClick={(e) => { e.preventDefault(); window.history.pushState({}, '', '/teacher'); window.dispatchEvent(new PopStateEvent('popstate')); setActiveTab('teacher'); }}
-            >
+            </NavLink>
+            <NavLink to="/dashboard/teacher" className={getNavLinkClass}>
               Teacher
-            </a>
-            
+            </NavLink>
+          </div>
+          <div className="flex items-center">
+            <button
+              onClick={handleLogoutClick}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-md"
+            >
+              Logout
+            </button>
           </div>
         </nav>
 
-        <div className="p-6">
-          {activeTab === 'dashboard' && (
-            <>
-              <h1 className="text-3xl font-bold text-gray-900 mb-8">Dashboard</h1>
-              <div className="grid grid-cols-2 gap-6 mb-6">
-                <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Teacher Onboarding</h2>
-                  <TeacherOnboarding />
-                </div>
-                <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Class Onboarding</h2>
-                  <ClassOnboarding />
-                </div>
-              </div>
-              <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Download Panel</h2>
-                <DownloadPanel />
-              </div>
-            </>
-          )}
-
-          {activeTab === 'teacher' && (
-            <Teacher />
-          )}
-
-          {activeTab === 'classroom' && (
-            <Classroom />
-          )}
-        </div>
+        <main className="p-6">
+          {/* Outlet is the placeholder for nested route content */}
+          <Outlet />
+        </main>
       </div>
     </div>
   );
