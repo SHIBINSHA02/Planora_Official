@@ -5,6 +5,7 @@ import Dashboard from './Components/Dashboard/dashboard';
 
 import Login from './Components/auth/login';
 import Signup from './Components/auth/signup';
+import OrganisationOnboarding from './Components/organisation/organisation';
 
 function App() {
   const [path, setPath] = useState(window.location.pathname);
@@ -33,6 +34,8 @@ function App() {
         return <Dashboard initialTab="teacher"/>;
       case '/classroom':
         return <Dashboard initialTab="classroom"/>;
+      case '/organisation':
+          return <OrganisationOnboarding/>
       case '/login':
         return <Login onLoggedIn={() => navigate('/dashboard')} />;
       case '/signup':
