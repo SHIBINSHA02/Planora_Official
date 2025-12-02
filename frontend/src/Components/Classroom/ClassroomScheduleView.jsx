@@ -34,6 +34,23 @@ const ClassroomScheduleView = ({
           handleUpdateSchedule(selectedClassroom, dayIndex, periodIndex, updatedAssignments)
         }
       />
+      <div className="text-center text-blue-500 font-semibold">
+        
+        <div className="text-xs text-white flex justify-end items-center">
+          <button
+            onClick={() => window.print()}
+            className=" m-5 px-5 py-3 text-base bg-[#4F46E5] rounded-lg hover:bg-[#4338CA] text-white"
+          >
+            Print Schedule
+          </button>
+          <button onClick={() => console.log("Automation scheduled")} className="m-5 px-5 py-3  mr-0 text-base bg-[#4F46E5] rounded-lg hover:bg-[#4338CA] text-white">
+            Schedule Automation
+          </button>
+        </div>
+        <p className="text-sm  text-black m-14">
+          Schedule for {currentClassroom.classname} ({currentClassroom.classroom_id})
+        </p>
+      </div>
     </div>
   );
 };
