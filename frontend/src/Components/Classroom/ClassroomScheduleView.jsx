@@ -2,6 +2,13 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import ClassroomScheduleTable from '../tables/ClassroomScheduleTable';
+import axios from 'axios';
+
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000';
+
+
+
+
 
 const ClassroomScheduleView = ({
   classrooms,
@@ -20,7 +27,22 @@ const ClassroomScheduleView = ({
   }
 
   const availableSubjects = currentClassroom.subjects?.map(s => s.subject) || [];
+  const handleAutomate = async () => {
+    try {
+  
+      const res = await axios.post(`${API_BASE}/automate`, {
+        params: {
+          classroom_id: selectedClassroom 
+        }
+      });
 
+      alert(`Schedule Automation triggered successfully for ${selectedClassroom}. Status: ${res.status}`);
+    } catch (error) {
+    
+      console.error('Automation Failed:', error);
+      alert('Failed to Automate: Check console for details.');
+    }
+  };
   return (
     <div className="space-y-6 mt-6">
       <ClassroomScheduleTable
@@ -33,6 +55,7 @@ const ClassroomScheduleView = ({
         onUpdateSchedule={(dayIndex, periodIndex, updatedAssignments) =>
           handleUpdateSchedule(selectedClassroom, dayIndex, periodIndex, updatedAssignments)
         }
+        
       />
       <div className="text-center text-blue-500 font-semibold">
         
@@ -43,7 +66,7 @@ const ClassroomScheduleView = ({
           >
             Print Schedule
           </button>
-          <button onClick={() => console.log("Automation scheduled")} className="m-5 px-5 py-3  mr-0 text-base bg-[#4F46E5] rounded-lg hover:bg-[#4338CA] text-white">
+          <button onClick={handleAutomate} className="m-5 px-5 py-3  mr-0 text-base bg-[#4F46E5] rounded-lg hover:bg-[#4338CA] text-white">
             Schedule Automation
           </button>
         </div>
