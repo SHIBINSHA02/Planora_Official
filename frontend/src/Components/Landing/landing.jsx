@@ -1,3 +1,4 @@
+// frontend/src/Components/Landing/landing.jsx
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom'; // Import Link for SPA navigation
 import { Calendar, Clock, Users, BookOpen, Star, ArrowRight, Menu, X, LogOut, User } from 'lucide-react';

@@ -30,10 +30,8 @@ const ClassroomScheduleView = ({
   const handleAutomate = async () => {
     try {
   
-      const res = await axios.post(`${API_BASE}/automate`, {
-        params: {
-          classroom_id: selectedClassroom 
-        }
+      const res = await axios.get(`${API_BASE}/automate/${selectedClassroom}`, {
+        
       });
 
       alert(`Schedule Automation triggered successfully for ${selectedClassroom}. Status: ${res.status}`);
