@@ -1,7 +1,6 @@
 // backend/controllers/automate.js
 const {Classroom ,checkClassroomExists,saveClassroom } = require('../models/classroomModel');
-
-
+const Teacher = require('../models/Teacher');
 function printScheduleToConsole(schedule) {
     const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
     const maxPeriods = 6;
