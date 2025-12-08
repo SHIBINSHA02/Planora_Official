@@ -234,10 +234,8 @@ const ClassOnboarding = () => {
 
   // --- Render UI ---
   return (
-    <div className="p-6 max-w-2xl mx-auto bg-gray-50 rounded-xl shadow-lg">
-      <h2 className="text-2xl font-bold text-indigo-700 mb-6 border-b pb-2">
-        Class Schedule Onboarding
-      </h2>
+    <div className="p-6 max-w-2xl mx-auto  rounded-xl ">
+      
 
       {submissionMessage && (
         <div
