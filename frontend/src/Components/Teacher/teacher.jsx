@@ -1,6 +1,6 @@
 // frontend/src/Components/Teacher/teacher.jsx
 import React, { useEffect, useState } from "react";
-import TeacherScheduleTable from "../tables/TeacherScheduleTable"; // Import the new, focused table component
+import TeacherScheduleTable from "../tables/TeacherScheduleTable";
 
 const Teacher = () => {
   const [teachers, setTeachers] = useState([]);
@@ -12,12 +12,13 @@ const Teacher = () => {
   const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
   const periods = ["Period 1", "Period 2", "Period 3", "Period 4", "Period 5", "Period 6"];
 
-  // Effect 1: Fetch all teachers to populate the dropdown when the component mounts.
+  // Effect 1: Fetch all teachers
   useEffect(() => {
     const fetchTeachers = async () => {
       try {
-        // Fetch from the endpoint that lists all teachers
-        const response = await fetch("http://localhost:3000/api/teachers/");
+        // ✅ FIX: Removed "http://localhost:3000" to use the Vite Proxy
+        const response = await fetch("/api/teachers/");
+
         if (!response.ok) {
           throw new Error(`Failed to fetch teachers: ${response.statusText}`);
         }
@@ -29,14 +30,13 @@ const Teacher = () => {
       }
     };
     fetchTeachers();
-  }, []); // Empty dependency array means this runs once on mount
+  }, []);
 
-  // Effect 2: Fetch the selected teacher’s schedule whenever `selectedTeacherId` changes.
+  // Effect 2: Fetch the selected teacher’s schedule
   useEffect(() => {
     const fetchTeacherSchedule = async () => {
-      // Don't run if no teacher is selected
       if (!selectedTeacherId) {
-        setScheduleData([]); // Clear schedule if no teacher is selected
+        setScheduleData([]);
         return;
       }
 
@@ -44,26 +44,26 @@ const Teacher = () => {
       setError("");
 
       try {
-        // Fetch from the endpoint for a specific teacher by their ID
-        const response = await fetch(`http://localhost:3000/api/teachers/${selectedTeacherId}`);
+        // ✅ FIX: Removed "http://localhost:3000" to use the Vite Proxy
+        const response = await fetch(`/api/teachers/${selectedTeacherId}`);
+
         if (!response.ok) {
           throw new Error("Failed to fetch teacher details");
         }
         const teacher = await response.json();
 
-        // Set the scheduleData state with the schedule_grid from the API response
         setScheduleData(teacher.schedule_grid || []);
       } catch (err) {
         console.error(err);
         setError("Error fetching teacher schedule. Please try again.");
-        setScheduleData([]); // Clear schedule on error
+        setScheduleData([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchTeacherSchedule();
-  }, [selectedTeacherId]); // This effect re-runs whenever `selectedTeacherId` changes
+  }, [selectedTeacherId]);
 
   return (
     <div className="p-6 bg-gray-50 min-h-full">
@@ -79,14 +79,12 @@ const Teacher = () => {
             id="teacher-select"
             value={selectedTeacherId}
             onChange={(e) => setSelectedTeacherId(e.target.value)}
-            className={`w-full appearance-none rounded-md bg-white border border-gray-300 px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-              selectedTeacherId ? "text-gray-900" : "text-gray-400"
-            }`}
+            className={`w-full appearance-none rounded-md bg-white border border-gray-300 px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${selectedTeacherId ? "text-gray-900" : "text-gray-400"
+              }`}
           >
             <option value="" disabled>
               -- Select a teacher --
             </option>
-            {/* Map over the fetched teachers to create the options */}
             {teachers.map((t) => (
               <option key={t._id} value={t._id}>
                 {t.teachername}
@@ -109,7 +107,7 @@ const Teacher = () => {
       {loading && <p className="text-gray-600">Loading schedule...</p>}
       {error && <p className="text-red-600 font-medium">{error}</p>}
 
-      {/* Schedule Table - Renders only when a teacher is selected and not loading */}
+      {/* Schedule Table */}
       {selectedTeacherId && !loading && !error && (
         <>
           <h2 className="text-xl font-semibold text-gray-800 mb-3">Weekly Schedule Overview</h2>

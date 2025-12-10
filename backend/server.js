@@ -23,7 +23,15 @@ mongoose.connect('mongodb://localhost:27017/planora_official', {
 .catch(err => console.error('❌ MongoDB connection error:', err));
 
 // Middleware
-app.use(cors());
+const frontendURL ='http://localhost:5173';
+
+app.use(cors({
+  origin: 'http://localhost:5173', // EXACT URL of your frontend
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true // ESSENTIAL because your frontend uses withCredentials: true
+}));// No config object - allows all origins ('*')
+
 app.use(express.json());
 app.use(morgan('dev'));
 
@@ -37,6 +45,7 @@ const io = new Server(server, {
   cors: {
     origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  
   },
 });
 
