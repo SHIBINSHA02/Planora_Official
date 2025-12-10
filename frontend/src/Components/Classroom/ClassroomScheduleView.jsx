@@ -7,9 +7,6 @@ import axios from 'axios';
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000';
 
 
-
-
-
 const ClassroomScheduleView = ({
   classrooms,
   classSchedules,
@@ -29,14 +26,14 @@ const ClassroomScheduleView = ({
   const availableSubjects = currentClassroom.subjects?.map(s => s.subject) || [];
   const handleAutomate = async () => {
     try {
-  
-      const res = await axios.get(`${API_BASE}/automate/${selectedClassroom}`, {
-        
-      });
+
+
+      const res = await axios.get(`${API_BASE}/automate/${selectedClassroom}`, {});
+
 
       alert(`Schedule Automation triggered successfully for ${selectedClassroom}. Status: ${res.status}`);
     } catch (error) {
-    
+
       console.error('Automation Failed:', error);
       alert('Failed to Automate: Check console for details.');
     }

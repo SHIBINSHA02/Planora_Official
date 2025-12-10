@@ -9,7 +9,7 @@ const auth =require('./routes/auth')
 const teacherRoutes = require('./routes/teacherRoutes');
 const classroomRoutes = require('./routes/classroomRoutes');
 const { teacherEmitter } = require('./controllers/teacherController');
-const automate=require('./routes/automate')
+const automate = require('./routes/automate')
 require('dotenv').config();
 const app = express();
 const server = http.createServer(app);
@@ -24,7 +24,15 @@ mongoose.connect('mongodb://localhost:27017/planora_official', {
 .catch(err => console.error('❌ MongoDB connection error:', err));
 
 // Middleware
-app.use(cors());
+const frontendURL ='http://localhost:5173';
+
+app.use(cors({
+  origin: 'http://localhost:5173', // EXACT URL of your frontend
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true // ESSENTIAL because your frontend uses withCredentials: true
+}));// No config object - allows all origins ('*')
+
 app.use(express.json());
 app.use(morgan('dev'));
 
@@ -32,12 +40,14 @@ app.use(morgan('dev'));
 app.use('/api/auth',auth)
 app.use('/api/teachers', teacherRoutes);
 app.use('/api/classrooms', classroomRoutes);
-app.use('/automate',automate)
+app.use('/automate', automate)
+
 // Socket.IO setup
 const io = new Server(server, {
   cors: {
     origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  
   },
 });
 

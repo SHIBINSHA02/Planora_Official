@@ -1,6 +1,5 @@
 // backend/controllers/automate.js
-const {Classroom ,checkClassroomExists,saveClassroom } = require('../models/classroomModel');
-const Teacher = require('../models/Teacher');
+const { Classroom, checkClassroomExists, saveClassroom } = require('../models/classroomModel');
 function printScheduleToConsole(schedule) {
     const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
     const maxPeriods = 6;
@@ -34,18 +33,12 @@ function printScheduleToConsole(schedule) {
         }
     });
     console.log(`\n-----------------------------------------------------`);
+
 }
-
-
-
-
-
-
-
-exports.automateClassShedule  = async(req,res) =>{
-    try{
+exports.automateClassShedule = async (req, res) => {
+    try {
         const { classroom_id } = req.params;
-        
+
 
         if (!classroom_id) {
             return res.status(400).json({
@@ -54,8 +47,8 @@ exports.automateClassShedule  = async(req,res) =>{
             });
         }
 
-      
-        
+
+
 
         const classroom = await Classroom.findOne({ classroom_id });
         console.log('Retrieved Classroom Object:', classroom.schedule);
@@ -68,17 +61,14 @@ exports.automateClassShedule  = async(req,res) =>{
         }
 
         console.log(`\n--- Schedule for Classroom: ${classroom.classname} (${classroom_id}) ---`);
-       
-        
 
         res.status(200).json({
             success: true,
-            message: `Classroom '${classroom_id}' updated successfully`,
-        
-        });
-        
+            message: `Classroom '${ classroom_id }' updated successfully`,
+
+        })
     }
-    catch(err){
+    catch (err) {
         console.error('Error creaating automation');
         return res.status(500).json({ success: false, message: 'Internal Server Error', error: err.message });
     }
