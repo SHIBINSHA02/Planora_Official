@@ -22,13 +22,13 @@ const Dashboard = ({ onLogout }) => {
     isActive ? 'text-indigo-600 font-semibold' : 'text-gray-600 hover:text-indigo-700';
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto">
-        <nav className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white">
+    <div className="min-h-screen ">
+      <div className="max-w-7xl mx-auto ">
+        <nav className="flex items-center justify-between px-6 py-4  bg-white m-8 shadow-blue-200 shadow-lg  rounded-3xl">
           <div className="flex items-center gap-3">
-            <img src="/logo.svg" alt="Logo" className="h-16 w-16" />
+            <img src="/logo.svg" alt="Logo" className="h-auto w-20" />
           </div>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-6 ">
             {/* Replace <a> tags with <NavLink> */}
             <NavLink to="/dashboard" className={getNavLinkClass} end>
               Dashboard

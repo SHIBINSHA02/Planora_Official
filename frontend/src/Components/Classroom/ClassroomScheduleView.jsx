@@ -65,7 +65,7 @@ const ClassroomScheduleView = ({
             Schedule Automation
           </button>
         </div>
-        <p className="text-sm  text-black m-14">
+        <p className="text-sm  text-gray-600 m-14">
           Schedule for {currentClassroom.classname} ({currentClassroom.classroom_id})
         </p>
       </div>

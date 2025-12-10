@@ -1,5 +1,5 @@
 // backend/controllers/teacherController.js
-const Teacher = require('../models/Teacher');
+const { Teacher } = require('../models/Teacher');
 const EventEmitter = require('events');
 
 const teacherEmitter = new EventEmitter();
@@ -8,13 +8,13 @@ exports.teacherEmitter = teacherEmitter;
 const Counter = require('../models/counter');
 
 const generateTeacherId = async () => {
-  const counter = await Counter.findOneAndUpdate(
-    { _id: 'teacherid' },               // Identify the sequence
-    { $inc: { sequence_value: 1 } },    // Atomically increment
-    { new: true, upsert: true }         // Create if doesn't exist
-  );
+    const counter = await Counter.findOneAndUpdate(
+        { _id: 'teacherid' },               // Identify the sequence
+        { $inc: { sequence_value: 1 } },    // Atomically increment
+        { new: true, upsert: true }         // Create if doesn't exist
+    );
 
-  return `T-${counter.sequence_value}`;
+    return `T-${counter.sequence_value}`;
 };
 
 // POST /api/teachers - Create a new teacher
@@ -40,13 +40,13 @@ exports.createTeacher = async (req, res) => {
         // Emit event for socket broadcast
         teacherEmitter.emit('teacher_created', savedTeacher);
 
-        res.status(201).json({ 
+        res.status(201).json({
             message: "Teacher created successfully.",
-            teacher: savedTeacher 
+            teacher: savedTeacher
         });
 
     } catch (error) {
-        if (error.code === 11000) { 
+        if (error.code === 11000) {
             return res.status(409).json({ message: "A teacher with this Mail ID or Teacher ID already exists." });
         }
         console.error('Error creating teacher:', error);
@@ -86,13 +86,13 @@ exports.updateTeacher = async (req, res) => {
         if (updateData.teacherid && updateData.teacherid !== teacherid) {
             return res.status(400).json({ message: "Cannot change the teacher's ID." });
         }
-        
+
         // 2. If a schedule_grid is being updated, validate its dimensions
         if (updateData.schedule_grid) {
             const grid = updateData.schedule_grid;
             if (!Array.isArray(grid) || grid.length !== 5 || grid.some(row => !Array.isArray(row) || row.length !== 6)) {
-                return res.status(400).json({ 
-                    message: "Invalid schedule_grid format. It must be a 5x6 array." 
+                return res.status(400).json({
+                    message: "Invalid schedule_grid format. It must be a 5x6 array."
                 });
             }
         }
@@ -138,7 +138,7 @@ exports.deleteTeacher = async (req, res) => {
             return res.status(404).json({ message: `Teacher with ID '${teacherid}' not found.` });
         }
 
- 
+
         res.status(200).json({
             message: `Teacher '${deletedTeacher.teachername}' (ID: ${teacherid}) was deleted successfully.`
         });

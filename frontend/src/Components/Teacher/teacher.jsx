@@ -66,8 +66,8 @@ const Teacher = () => {
   }, [selectedTeacherId]);
 
   return (
-    <div className="p-6 bg-gray-50 min-h-full">
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">Teacher Schedule Viewer</h1>
+    <div className="p-6  min-h-full">
+      <h1 className="text-xl font-semibold  text-gray-900 mb-6">Teacher Schedule Viewer</h1>
 
       {/* Teacher Selection Dropdown */}
       <div className="mb-6">
