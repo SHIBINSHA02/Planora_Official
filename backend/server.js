@@ -9,6 +9,7 @@ const auth =require('./routes/auth')
 const teacherRoutes = require('./routes/teacherRoutes');
 const classroomRoutes = require('./routes/classroomRoutes');
 const { teacherEmitter } = require('./controllers/teacherController');
+const automate = require('./routes/automate')
 require('dotenv').config();
 const app = express();
 const server = http.createServer(app);
@@ -39,6 +40,7 @@ app.use(morgan('dev'));
 app.use('/api/auth',auth)
 app.use('/api/teachers', teacherRoutes);
 app.use('/api/classrooms', classroomRoutes);
+app.use('/automate', automate)
 
 // Socket.IO setup
 const io = new Server(server, {
