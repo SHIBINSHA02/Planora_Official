@@ -49,9 +49,20 @@ exports.automateClassShedule = async (req, res) => {
 
 
 
-
+        //get class
         const classroom = await Classroom.findOne({ classroom_id });
+        console.log(classroom)
         console.log('Retrieved Classroom Object:', classroom.schedule);
+
+        //get techers id
+        teachers = classroom.subjects
+        console.log("teachers list",teachers)
+
+
+        //
+
+
+
         printScheduleToConsole(classroom.schedule)
         if (!classroom) {
             return res.status(404).json({

@@ -13,6 +13,10 @@ const ScheduleItemSchema = new mongoose.Schema({
   subject: {
     type: String,
     required: true
+  },
+  workload:{
+    type:Number,
+    default :0
   }
 }, { _id: false }); // Disable automatic _id inside subdocument array
 

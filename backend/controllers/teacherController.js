@@ -75,6 +75,8 @@ exports.getTeacherById = async (req, res) => {
     }
 };
 
+
+
 // PUT /api/teachers/:teacherid - Update a teacher's information
 exports.updateTeacher = async (req, res) => {
     try {
