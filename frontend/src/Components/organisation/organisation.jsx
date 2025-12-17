@@ -1,5 +1,6 @@
+// frontend/src/Components/organisation/organisation.jsx
 import React, { useState } from 'react';
-
+import { Link } from 'react-router-dom'; 
 // --- Placeholder Icons ---
 // In a real app, you would import these from a library like 'lucide-react'
 const Menu = ({ className }) => <svg className={className} stroke="currentColor" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>;
@@ -21,18 +22,19 @@ const Header = ({ user, logout, isMenuOpen, setIsMenuOpen }) => {
           <div className="flex items-center">
             <div className="flex items-center space-x-2">
               <div className="flex-shrink-0">
-                {/* Ensure you have a logo.svg in your public folder */}
+                <Link to="/" className="">
                 <img
                   src="/logo.svg"
                   alt="Planora Logo"
                   className="h-14 w-auto object-contain"
                 />
+                </Link>
               </div>
             </div>
           </div>
 
           <nav className="hidden md:flex space-x-8">
-            <a href="#features" className="text-gray-700 hover:text-indigo-600 font-medium">Features</a>
+            <a href="/#features" className="text-gray-700 hover:text-indigo-600 font-medium">Features</a>
             <a href="/" className="text-gray-700 hover:text-indigo-600 font-medium">Home</a>
           </nav>
 

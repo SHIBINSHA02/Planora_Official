@@ -102,7 +102,7 @@ const Teacher = () => {
           </span>
         </div>
       </div>
-
+          
       {/* Loading & Error States */}
       {loading && <p className="text-gray-600">Loading schedule...</p>}
       {error && <p className="text-red-600 font-medium">{error}</p>}
