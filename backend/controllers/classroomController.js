@@ -1,86 +1,98 @@
 // backend/controllers/classroomController.js
-const { Classroom, checkClassroomExists, saveClassroom } = require('../models/classroomModel');
+const { Classroom } = require('../models/classroomModel');
+const ScheduleSlot = require('../models/ScheduleSlot');
 
-// Your existing validation (assuming it exists)
-const { validateClassroomSchema } = require('../models/validation');
+/* ================= CREATE ================= */
 
-// Existing onboardClassroom function (keep as is)
 exports.onboardClassroom = async (req, res) => {
   try {
-    const data = req.body;
+    const { organisationId, classroomId, className, subjects, department } = req.body;
 
-    // Validate incoming data
-    const [isValid, errorMessage] = validateClassroomSchema(data);
-    if (!isValid) {
-      return res.status(400).json({ success: false, message: `Validation Error: ${errorMessage}` });
+    if (!organisationId || !classroomId || !className) {
+      return res.status(400).json({
+        success: false,
+        message: "organisationId, classroomId and className are required"
+      });
     }
 
-    const classroomId = data.classroom_id;
-
-    // Check if classroom already exists
-    if (await checkClassroomExists(classroomId)) {
-      return res.status(409).json({ success: false, message: `Classroom with ID '${classroomId}' already exists.` });
+    const exists = await Classroom.findOne({ classroomId, organisationId });
+    if (exists) {
+      return res.status(409).json({
+        success: false,
+        message: `Classroom '${classroomId}' already exists in this organisation`
+      });
     }
 
-    // Save classroom to DB
-    const savedClassroom = await saveClassroom(data);
-
-    return res.status(201).json({
-      success: true,
-      message: `Classroom '${savedClassroom.classname}' onboarded successfully with schedule.`,
-      classroom_id: savedClassroom.classroom_id
+    const classroom = await Classroom.create({
+      organisationId,
+      classroomId,
+      className,
+      department,
+      subjects
     });
 
-  } catch (err) {
-    console.error('Error saving classroom:', err);
-    return res.status(500).json({ success: false, message: 'Internal Server Error', error: err.message });
+    res.status(201).json({
+      success: true,
+      message: "Classroom onboarded successfully",
+      classroom
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to onboard classroom",
+      error
+    });
   }
 };
 
-// GET /api/classrooms - Get all classrooms
+/* ================= READ (ORG SCOPED) ================= */
+
 exports.getAllClassrooms = async (req, res) => {
   try {
-    const classrooms = await Classroom.find({}, {
-      classroom_id: 1,
-      classname: 1,
-      admin: 1,
-      subjects: 1
-      // Exclude schedule for listing to reduce payload size
-    }).lean();
+    const { organisationId } = req.query;
+
+    if (!organisationId) {
+      return res.status(400).json({
+        success: false,
+        message: "organisationId is required"
+      });
+    }
+
+    const classrooms = await Classroom.find(
+      { organisationId },
+      { _id: 0, classroomId: 1, className: 1, department: 1, subjects: 1 }
+    ).lean();
 
     res.status(200).json({
       success: true,
       count: classrooms.length,
       data: classrooms
     });
-  } catch (err) {
-    console.error('Error fetching classrooms:', err);
+
+  } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch classrooms',
-      error: err.message
+      message: "Failed to fetch classrooms",
+      error
     });
   }
 };
 
-// GET /api/classrooms/:classroom_id - Get specific classroom
 exports.getClassroom = async (req, res) => {
   try {
-    const { classroom_id } = req.params;
-    
-    if (!classroom_id) {
-      return res.status(400).json({
-        success: false,
-        message: 'Classroom ID is required'
-      });
-    }
+    const { classroomId } = req.params;
+    const { organisationId } = req.query;
 
-    const classroom = await Classroom.findOne({ classroom_id }).lean();
-    
+    const classroom = await Classroom.findOne({
+      classroomId,
+      organisationId
+    }).lean();
+
     if (!classroom) {
       return res.status(404).json({
         success: false,
-        message: `Classroom with ID '${classroom_id}' not found`
+        message: "Classroom not found"
       });
     }
 
@@ -88,139 +100,96 @@ exports.getClassroom = async (req, res) => {
       success: true,
       data: classroom
     });
-  } catch (err) {
-    console.error('Error fetching classroom:', err);
+
+  } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch classroom',
-      error: err.message
+      message: "Failed to fetch classroom",
+      error
     });
   }
 };
 
-// PUT /api/classrooms/:classroom_id - Update classroom
+/* ================= UPDATE ================= */
+
 exports.updateClassroom = async (req, res) => {
   try {
-    const { classroom_id } = req.params;
-    const updateData = req.body;
+    const { classroomId } = req.params;
+    const { organisationId } = req.body;
 
-    if (!classroom_id) {
+    if (!organisationId) {
       return res.status(400).json({
         success: false,
-        message: 'Classroom ID is required'
+        message: "organisationId is required"
       });
     }
 
-    // Validate update data (basic validation)
-    if (updateData.classroom_id && updateData.classroom_id !== classroom_id) {
-      return res.status(400).json({
-        success: false,
-        message: 'Cannot change classroom_id'
-      });
-    }
+    // Prevent ID mutation
+    delete req.body.classroomId;
 
-    // Check if classroom exists
-    const exists = await checkClassroomExists(classroom_id);
-    if (!exists) {
+    const updated = await Classroom.findOneAndUpdate(
+      { classroomId, organisationId },
+      { $set: req.body },
+      { new: true, runValidators: true }
+    );
+
+    if (!updated) {
       return res.status(404).json({
         success: false,
-        message: `Classroom with ID '${classroom_id}' not found`
+        message: "Classroom not found"
       });
     }
-
-    // Update classroom
-    const updatedClassroom = await Classroom.findOneAndUpdate(
-      { classroom_id },
-      { $set: updateData },
-      { new: true, runValidators: true }
-    ).lean();
 
     res.status(200).json({
       success: true,
-      message: `Classroom '${updatedClassroom.classname}' updated successfully`,
-      data: updatedClassroom
+      message: "Classroom updated successfully",
+      classroom: updated
     });
-  } catch (err) {
-    console.error('Error updating classroom:', err);
+
+  } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Failed to update classroom',
-      error: err.message
+      message: "Failed to update classroom",
+      error
     });
   }
 };
 
-// DELETE /api/classrooms/:classroom_id - Delete classroom
+/* ================= DELETE ================= */
+
 exports.deleteClassroom = async (req, res) => {
   try {
-    const { classroom_id } = req.params;
+    const { classroomId } = req.params;
+    const { organisationId } = req.query;
 
-    if (!classroom_id) {
-      return res.status(400).json({
-        success: false,
-        message: 'Classroom ID is required'
-      });
-    }
+    const deleted = await Classroom.findOneAndDelete({
+      classroomId,
+      organisationId
+    });
 
-    const deletedClassroom = await Classroom.findOneAndDelete({ classroom_id }).lean();
-    
-    if (!deletedClassroom) {
+    if (!deleted) {
       return res.status(404).json({
         success: false,
-        message: `Classroom with ID '${classroom_id}' not found`
+        message: "Classroom not found"
       });
     }
+
+    // 🔥 Cleanup related schedule slots
+    await ScheduleSlot.deleteMany({
+      classroomId,
+      organisationId
+    });
 
     res.status(200).json({
       success: true,
-      message: `Classroom '${deletedClassroom.classname}' deleted successfully`,
-      deleted_classroom_id: classroom_id
+      message: "Classroom deleted successfully"
     });
-  } catch (err) {
-    console.error('Error deleting classroom:', err);
+
+  } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Failed to delete classroom',
-      error: err.message
-    });
-  }
-};
-
-// GET /api/classrooms/:classroom_id/schedule - Get classroom schedule only
-exports.getSchedule = async (req, res) => {
-  try {
-    const { classroom_id } = req.params;
-
-    if (!classroom_id) {
-      return res.status(400).json({
-        success: false,
-        message: 'Classroom ID is required'
-      });
-    }
-
-    const classroom = await Classroom.findOne(
-      { classroom_id },
-      { schedule: 1, classname: 1 }
-    ).lean();
-
-    if (!classroom) {
-      return res.status(404).json({
-        success: false,
-        message: `Classroom with ID '${classroom_id}' not found`
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      classname: classroom.classname,
-      schedule: classroom.schedule
-    });
-  } catch (err) {
-    console.error('Error fetching schedule:', err);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch schedule',
-      error: err.message
+      message: "Failed to delete classroom",
+      error
     });
   }
 };
