@@ -1,5 +1,7 @@
 // backend/controllers/teacherController.js
-const { Teacher } = require('../models/Teacher');
+
+const Teacher = require('../models/Teacher');
+
 const ScheduleSlot = require('../models/ScheduleSlot');
 const Counter = require('../models/counter');
 const EventEmitter = require('events');
