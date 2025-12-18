@@ -155,7 +155,8 @@ function LandingPage() {
 
       {/* ================= HERO ================= */}
       <main>
-        <section className="flex items-center justify-center py-20 m-4 border-2 border-indigo-600 rounded-2xl bg-gradient-to-r from-blue-50 via-white to-blue-50 lg:h-[70vh]">
+        <section className="flex items-center justify-center py-20 m-4 rounded-2xl  bg-gradient-to-r from-blue-50 via-white to-blue-50
+    lg:bg-gradient-to-r lg:from-blue-100 lg:via-white lg:to-blue-100 lg:h-[70vh]">
           <div className="grid gap-12 px-4 max-w-7xl lg:grid-cols-2">
             {/* LEFT */}
             <div>
@@ -235,7 +236,7 @@ function LandingPage() {
         </section>
 
         {/* ================= FEATURES ================= */}
-        <section id="features" className="py-20">
+        <section id="features" className="py-20 h-[70vh] flex justify-center items-center">
           <div className="grid gap-8 px-4 mx-auto max-w-7xl md:grid-cols-2 lg:grid-cols-4">
             {features.map((feature, idx) => (
               <div
@@ -251,7 +252,7 @@ function LandingPage() {
             ))}
           </div>
         </section>
-        <footer className="py-12 text-white bg-gray-900">
+        <footer className="py-12 mx-3 text-white bg-gray-900 rounded-t-3xl">
         <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
             <div className="md:col-span-2">
