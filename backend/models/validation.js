@@ -1,3 +1,4 @@
+// backend/models/validation.js
 function validateScheduleSlot(data) {
   const { organisationId, classroomId, teacherId, subject, day, period } = data;
 

@@ -1,3 +1,4 @@
+// frontend/src/context/OrganisationContext.jsx
 import React, { createContext, useContext } from "react";
 
 const OrganisationContext = createContext(null);

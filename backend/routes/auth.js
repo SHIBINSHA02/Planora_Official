@@ -1,8 +1,10 @@
-// backend/routes/auth.js
-const express = require('express');
-const router = express.Router(); 
-const auth=require('../controllers/auth');
+const express = require("express");
+const router = express.Router();
 
-router.post('/', auth.newUser);
-router.post('/login', auth.loginUser);
-module.exports =router;
+const requireAuth = require("../middleware/requireAuth");
+const { syncUser } = require("../controllers/userController");
+
+// Create / sync user profile after Clerk login
+router.post("/sync", requireAuth, syncUser);
+
+module.exports = router;

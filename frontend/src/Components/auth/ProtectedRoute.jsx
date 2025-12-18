@@ -1,19 +1,15 @@
 // frontend/src/Components/auth/ProtectedRoute.jsx
-// frontend/src/Components/auth/ProtectedRoute.jsx
-import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate } from "react-router-dom";
+import { useAuth } from "@clerk/clerk-react";
 
-const ProtectedRoute = ({ children }) => {
-    // Check for the authentication token in localStorage
-    const token = localStorage.getItem('token');
+export default function ProtectedRoute({ children }) {
+  const { isSignedIn, isLoaded } = useAuth();
 
-    if (!token) {
-        // If no token is found, redirect the user to the login page
-        return <Navigate to="/login" />;
-    }
+  if (!isLoaded) return null; // or loader
 
-    // If a token is found, render the child component (the protected page)
-    return children;
-};
+  if (!isSignedIn) {
+    return <Navigate to="/login" replace />;
+  }
 
-export default ProtectedRoute;
+  return children;
+}
