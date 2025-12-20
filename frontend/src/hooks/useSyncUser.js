@@ -1,3 +1,4 @@
+// frontend/src/hooks/useSyncUser.js
 import { useEffect, useRef } from "react";
 import { useAuth, useUser } from "@clerk/clerk-react";
 
