@@ -12,7 +12,7 @@ const ScheduleSlot = require("../models/ScheduleSlot");
 async function seed() {
     try {
         console.log("🔌 Connecting to DB...");
-        await mongoose.connect("mongodb://localhost:27017/planora_official");
+        await mongoose.connect(process.env.MongoDB);
 
         /* ================= CLEAN OLD DATA ================= */
 
