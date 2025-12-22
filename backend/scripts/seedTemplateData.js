@@ -16,73 +16,74 @@ async function seed() {
 
         /* ================= CLEAN OLD DATA ================= */
 
-        await Promise.all([
-            Organisation.deleteMany({}),
-            Teacher.deleteMany({}),
-            Classroom.deleteMany({}),
-            ScheduleSlot.deleteMany({})
-        ]);
+        // await Promise.all([
+        //     Organisation.deleteMany({}),
+        //     Teacher.deleteMany({}),
+        //     Classroom.deleteMany({}),
+        //     ScheduleSlot.deleteMany({})
+        // ]);
 
-        console.log("🧹 Old data cleared");
+        // console.log("🧹 Old data cleared");
 
         /* ================= ORGANISATION ================= */
 
-        const organisation = await Organisation.create({
-            organisationId: "ORG1",
-            organisationName: "Planora Demo College"
-        });
+        // const organisation = await Organisation.create({
+        //     organisationId: "ORG1",
+        //     organisationName: "Planora Demo College",
+        //     adminName:"shibin24666@gmail.com"
+        // });
 
-        console.log("🏫 Organisation created");
+        // console.log("🏫 Organisation created");
 
         /* ================= TEACHERS ================= */
 
-        const teachers = await Teacher.insertMany([
-            {
-                organisationId: "ORG1",
-                teacherId: "T-1",
-                teacherName: "Alice Johnson",
-                email: "alice@college.edu",
-                subjects: ["Maths", "Physics"]
-            },
-            {
-                organisationId: "ORG1",
-                teacherId: "T-2",
-                teacherName: "Bob Smith",
-                email: "bob@college.edu",
-                subjects: ["Chemistry"]
-            },
-            {
-                organisationId: "ORG1",
-                teacherId: "T-3",
-                teacherName: "Clara Lee",
-                email: "clara@college.edu",
-                subjects: ["Computer Science"]
-            }
-        ]);
+        // const teachers = await Teacher.insertMany([
+        //     {
+        //         organisationId: "ORG1",
+        //         teacherId: "T-7",
+        //         teacherName: "Alice Johnson",
+        //         email: "alice1@college.edu",
+        //         subjects: ["Maths", "Physics"]
+        //     },
+        //     {
+        //         organisationId: "ORG1",
+        //         teacherId: "T-4",
+        //         teacherName: "Bob Smith",
+        //         email: "bob1@college.edu",
+        //         subjects: ["Chemistry"]
+        //     },
+        //     {
+        //         organisationId: "ORG1",
+        //         teacherId: "T-6",
+        //         teacherName: "Clara Lee",
+        //         email: "clara1@college.edu",
+        //         subjects: ["Computer Science"]
+        //     }
+        // ]);
 
-        console.log("👩‍🏫 Teachers created");
+        // console.log("👩‍🏫 Teachers created");
 
         /* ================= CLASSROOMS ================= */
 
         const classrooms = await Classroom.insertMany([
             {
                 organisationId: "ORG1",
-                classroomId: "CSE-A",
+                classroomId: "CSE-A1",
                 className: "Computer Science A",
                 department: "CSE",
                 subjects: [
-                    { subject: "Maths", defaultTeacherId: "T-1", weeklyHours: 4 },
-                    { subject: "CS", defaultTeacherId: "T-3", weeklyHours: 5 }
+                    { subject: "Maths", defaultTeacherId: "T-4", weeklyHours: 4 },
+                    { subject: "CS", defaultTeacherId: "T-6", weeklyHours: 5 }
                 ]
             },
             {
                 organisationId: "ORG1",
-                classroomId: "CSE-B",
+                classroomId: "CSE-B1",
                 className: "Computer Science B",
                 department: "CSE",
                 subjects: [
-                    { subject: "Physics", defaultTeacherId: "T-1", weeklyHours: 3 },
-                    { subject: "Chemistry", defaultTeacherId: "T-2", weeklyHours: 3 }
+                    { subject: "Physics", defaultTeacherId: "T-4", weeklyHours: 3 },
+                    { subject: "Chemistry", defaultTeacherId: "T-5", weeklyHours: 3 }
                 ]
             }
         ]);
@@ -95,16 +96,16 @@ async function seed() {
             // Monday Period 1 (parallel allowed)
             {
                 organisationId: "ORG1",
-                classroomId: "CSE-A",
-                teacherId: "T-1",
+                classroomId: "CSE-A1",
+                teacherId: "T-4",
                 subject: "Maths",
                 day: 0,
                 period: 0
             },
             {
                 organisationId: "ORG1",
-                classroomId: "CSE-A",
-                teacherId: "T-3",
+                classroomId: "CSE-A1",
+                teacherId: "T-6",
                 subject: "CS",
                 day: 0,
                 period: 0
@@ -113,8 +114,8 @@ async function seed() {
             // Tuesday Period 3
             {
                 organisationId: "ORG1",
-                classroomId: "CSE-B",
-                teacherId: "T-2",
+                classroomId: "CSE-B1",
+                teacherId: "T-5",
                 subject: "Chemistry",
                 day: 1,
                 period: 2
@@ -123,8 +124,8 @@ async function seed() {
             // Same teacher, same time, different classroom (allowed)
             {
                 organisationId: "ORG1",
-                classroomId: "CSE-A",
-                teacherId: "T-1",
+                classroomId: "CSE-A1",
+                teacherId: "T-4",
                 subject: "Physics",
                 day: 1,
                 period: 2
