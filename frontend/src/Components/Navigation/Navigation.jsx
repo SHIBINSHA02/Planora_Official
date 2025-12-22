@@ -10,7 +10,7 @@ const Navigation = () => {
   const { isSignedIn, loading, displayName } = useAuthContext();
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b shadow-sm">
+    <header className="sticky top-0 z-50 bg-white ">
       <div className="flex items-center justify-between h-16 px-4 mx-auto max-w-7xl">
 
         {/* Logo */}
@@ -69,6 +69,7 @@ const Navigation = () => {
             </>
           )}
         </div>
+          
 
         {/* Mobile Toggle */}
         <button
@@ -81,11 +82,13 @@ const Navigation = () => {
 
       {/* Mobile Menu */}
       {isMenuOpen && (
-        <div className="bg-white border-t md:hidden">
-          <div className="px-4 py-2 space-y-3">
+        <div className="px-2 md:hidden">
+        <div className="bg-white shadow-lg rounded-b-3xl">
+          <div className="px-4 py-2 space-y-3 ">
             <a href="#features" className="block text-gray-700">
               Features
             </a>
+            
 
             {!loading && isSignedIn ? (
               <>
@@ -113,6 +116,7 @@ const Navigation = () => {
               </>
             )}
           </div>
+        </div>
         </div>
       )}
     </header>
