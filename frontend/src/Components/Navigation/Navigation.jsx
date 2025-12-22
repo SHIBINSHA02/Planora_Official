@@ -10,12 +10,12 @@ const Navigation = () => {
   const { isSignedIn, loading, displayName } = useAuthContext();
 
   return (
-    <header className="sticky top-0 z-50 bg-white/50">
-      <div className="flex items-center justify-between h-16 px-4 mx-auto max-w-7xl">
+    <header className="sticky top-0 z-50 my-1 lg:w-2/3 lg:mx-auto rounded-2xl bg-white/50 backdrop-blur-2xl">
+      <div className="flex items-center justify-between h-16 px-4 mx-auto ">
 
         {/* Logo */}
         <Link to="/" className="flex items-center">
-          <img src="/logo.svg" alt="Planora Logo" className="h-14" />
+          <img src="/logo.svg" alt="Planora Logo" className="h-20" />
         </Link>
 
         {/* Desktop Nav */}
@@ -38,9 +38,9 @@ const Navigation = () => {
 
               <Link
                 to="/dashboard"
-                className="font-medium text-gray-700 text-indigo-600"
+                className="p-3 px-5 text-white bg-indigo-600 rounded-3xl"
               >
-                Dashboard
+                Recent Work
               </Link>
 
               <SignOutButton>

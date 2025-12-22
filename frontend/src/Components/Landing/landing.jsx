@@ -69,10 +69,10 @@ function LandingPage() {
                 {isSignedIn ? (
                   <>
                     <Link
-                      to="/dashboard"
+                      to="/profile"
                       className="flex items-center justify-center px-8 py-4 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
                     >
-                      Go to Dashboard
+                      Visit Profile
                       <ArrowRight className="w-5 h-5 ml-2" />
                     </Link>
 

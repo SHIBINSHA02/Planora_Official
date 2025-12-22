@@ -15,7 +15,7 @@ import DashboardHome from "./Components/Dashboard/DashboardHome";
 import Teacher from "./Components/Teacher/teacher";
 import Classroom from "./Components/Classroom/classroom";
 import OrganisationPage from "./Components/organisation/organisation";
-
+import Profile from "./Components/Profile/profile";
 /* Auth Pages */
 import Login from "./Components/auth/login";
 import Signup from "./Components/auth/signup";
@@ -59,10 +59,12 @@ function App() {
         </Route>
 
         <Route path="/organisation" element={<OrganisationPage />} />
+         <Route path="/profile" element={<Profile />} />
       </Route>
 
       {/* ================= FALLBACK ================= */}
       <Route path="*" element={<LandingPage />} />
+
 
     </Routes>
   );
