@@ -1,3 +1,4 @@
+// frontend/src/Components/Landing/landing.jsx
 import React from "react";
 import { Link } from "react-router-dom";
 import {
@@ -9,6 +10,7 @@ import {
 } from "lucide-react";
 import { useUser } from "@clerk/clerk-react";
 import Navigation from "../Navigation/Navigation";
+import Footer from "../Footer/Footer";
 
 function LandingPage() {
   const { isSignedIn, isLoaded } = useUser();
@@ -127,7 +129,7 @@ function LandingPage() {
         {/* FEATURES */}
         <section
           id="features"
-          className="flex items-center justify-center py-20"
+          className="flex items-center justify-center py-20 m-3 bg-[#4F46E5] rounded-2xl"
         >
           <div className="grid gap-8 px-4 max-w-7xl md:grid-cols-2 lg:grid-cols-4">
             {features.map((feature, idx) => (
@@ -146,6 +148,7 @@ function LandingPage() {
             ))}
           </div>
         </section>
+        <Footer/>
       </main>
     </div>
   );

@@ -22,10 +22,11 @@ const DashboardNavigation = () => {
       <nav className="items-center justify-between hidden px-6 py-4 m-8 bg-white shadow-lg md:flex shadow-blue-200 rounded-3xl">
         
         {/* Logo */}
+        <NavLink to="/" >
         <div className="flex items-center gap-3">
           <img src="/logo.svg" alt="Planora Logo" className="w-20 h-auto" />
         </div>
-
+         </NavLink>
         {/* Links */}
         <div className="flex items-center gap-6">
           <NavLink to="/dashboard" end className={getNavLinkClass}>

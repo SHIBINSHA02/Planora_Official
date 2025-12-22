@@ -1,71 +1,12 @@
 // frontend/src/Components/organisation/organisation.jsx
 import React, { useState } from "react";
-import { Link, Navigate } from "react-router-dom";
-import { SignOutButton } from "@clerk/clerk-react";
-import { useAuthContext } from "../../context/AuthContext";
+import { Navigate } from "react-router-dom";
+import { useUser } from "@clerk/clerk-react";
+
+import Navigation from "../Navigation/Navigation"; // ✅ YOUR existing navbar
 import { useOrganisationContext } from "../../context/useOrganisationContext";
 
-
-/* ================= ICONS ================= */
-const Menu = ({ className }) => (
-  <svg className={className} stroke="currentColor" fill="none" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-  </svg>
-);
-
-const X = ({ className }) => (
-  <svg className={className} stroke="currentColor" fill="none" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-  </svg>
-);
-
-const LogOut = ({ className }) => (
-  <svg className={className} stroke="currentColor" fill="none" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-  </svg>
-);
-
-/* ================= HEADER ================= */
-const Header = ({ isMenuOpen, setIsMenuOpen }) => {
-  const { isSignedIn, loading, displayName } = useAuthContext();
-
-  return (
-    <header className="bg-white border-b shadow-sm">
-      <div className="flex items-center justify-between h-16 px-4 mx-auto max-w-7xl">
-        <Link to="/" className="flex items-center">
-          <img src="/logo.svg" alt="Logo" className="h-10" />
-        </Link>
-
-        <nav className="hidden space-x-8 md:flex">
-          <Link to="/" className="text-gray-700 hover:text-indigo-600">
-            Home
-          </Link>
-        </nav>
-
-        <div className="items-center hidden gap-4 md:flex">
-          {!loading && isSignedIn && (
-            <>
-              <span className="text-sm text-gray-600">
-                Hi, {displayName}
-              </span>
-              <SignOutButton>
-                <button className="text-gray-500 hover:text-red-600">
-                  <LogOut className="w-5 h-5" />
-                </button>
-              </SignOutButton>
-            </>
-          )}
-        </div>
-
-        <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-          {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
-      </div>
-    </header>
-  );
-};
-
-/* ================= MODAL (UI ONLY FOR NOW) ================= */
+/* ================= MODAL ================= */
 const CreateOrganisationModal = ({ open, onClose }) => {
   const [name, setName] = useState("");
 
@@ -73,7 +14,8 @@ const CreateOrganisationModal = ({ open, onClose }) => {
 
   const submit = (e) => {
     e.preventDefault();
-    onClose(); // backend wiring later
+    // backend wiring later
+    onClose();
   };
 
   return (
@@ -83,10 +25,12 @@ const CreateOrganisationModal = ({ open, onClose }) => {
           onClick={onClose}
           className="absolute text-gray-400 top-3 right-3 hover:text-gray-600"
         >
-          <X className="w-5 h-5" />
+          ✕
         </button>
 
-        <h2 className="mb-6 text-xl font-semibold">Create Organisation</h2>
+        <h2 className="mb-6 text-xl font-semibold">
+          Create Organisation
+        </h2>
 
         <form onSubmit={submit} className="space-y-4">
           <input
@@ -94,6 +38,7 @@ const CreateOrganisationModal = ({ open, onClose }) => {
             placeholder="Organisation Name"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            required
           />
 
           <button className="w-full py-2 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">
@@ -136,8 +81,10 @@ const OrganisationOnboarding = () => {
   return (
     <div className="min-h-screen px-4 py-8 bg-gray-50">
       <div className="max-w-6xl mx-auto">
+
+        {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <h1 className="font-sans text-3xl font-medium">
+          <h1 className="text-3xl font-medium">
             Organisations
           </h1>
 
@@ -149,6 +96,7 @@ const OrganisationOnboarding = () => {
           </button>
         </div>
 
+        {/* Organisation Cards */}
         {organisations.length === 0 ? (
           <div className="p-10 text-center bg-white shadow-sm rounded-xl">
             <p className="text-gray-600">
@@ -199,19 +147,19 @@ const OrganisationOnboarding = () => {
 
 /* ================= ROUTE ================= */
 const OrganisationPage = () => {
-  const { isSignedIn, loading } = useAuthContext();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { isSignedIn, isLoaded } = useUser();
 
-  if (!loading && !isSignedIn) {
+  if (!isLoaded) return null;
+
+  if (!isSignedIn) {
     return <Navigate to="/login" replace />;
   }
 
   return (
     <>
-      <Header
-        isMenuOpen={isMenuOpen}
-        setIsMenuOpen={setIsMenuOpen}
-      />
+      {/* ✅ Your existing Landing Navigation */}
+      <Navigation />
+
       <OrganisationOnboarding />
     </>
   );
