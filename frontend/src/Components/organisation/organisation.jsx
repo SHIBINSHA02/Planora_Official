@@ -5,6 +5,7 @@ import { useUser } from "@clerk/clerk-react";
 
 import Navigation from "../Navigation/Navigation"; // ✅ YOUR existing navbar
 import { useOrganisationContext } from "../../context/useOrganisationContext";
+import Footer from "../Footer/Footer";
 
 /* ================= MODAL ================= */
 const CreateOrganisationModal = ({ open, onClose }) => {
@@ -19,8 +20,8 @@ const CreateOrganisationModal = ({ open, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="relative w-full max-w-md p-6 bg-white shadow-xl rounded-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm ">
+      <div className="relative w-full max-w-md p-6 m-3 bg-white shadow-xl rounded-xl">
         <button
           onClick={onClose}
           className="absolute text-gray-400 top-3 right-3 hover:text-gray-600"
@@ -83,7 +84,7 @@ const OrganisationOnboarding = () => {
       <div className="max-w-6xl mx-auto">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col justify-between gap-8 mb-8 lg:items-center lg:flex-row">
           <h1 className="text-3xl font-medium">
             Organisations
           </h1>
@@ -161,6 +162,7 @@ const OrganisationPage = () => {
       <Navigation />
 
       <OrganisationOnboarding />
+      <Footer/>
     </>
   );
 };

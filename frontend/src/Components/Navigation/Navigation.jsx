@@ -10,7 +10,7 @@ const Navigation = () => {
   const { isSignedIn, loading, displayName } = useAuthContext();
 
   return (
-    <header className="sticky top-0 z-50 bg-white ">
+    <header className="sticky top-0 z-50 bg-white/50">
       <div className="flex items-center justify-between h-16 px-4 mx-auto max-w-7xl">
 
         {/* Logo */}
@@ -20,10 +20,10 @@ const Navigation = () => {
 
         {/* Desktop Nav */}
         <nav className="hidden space-x-8 md:flex">
-          <a href="#features" className="font-medium text-gray-700 hover:text-indigo-600">
+          <a href="#features" className="hover:text-white  hover:bg-[#4F46E5] p-3 px-5 rounded-xl">
             Features
           </a>
-          <Link to="/" className="font-medium text-gray-700 hover:text-indigo-600">
+          <Link to="/" className=" hover:text-white  hover:bg-[#4F46E5] p-3 px-5 rounded-xl">
             Home
           </Link>
         </nav>
@@ -38,7 +38,7 @@ const Navigation = () => {
 
               <Link
                 to="/dashboard"
-                className="font-medium text-gray-700 hover:text-indigo-600"
+                className="font-medium text-gray-700 text-indigo-600"
               >
                 Dashboard
               </Link>
