@@ -3,17 +3,19 @@ import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { Menu, X, LogOut } from "lucide-react";
 import { SignOutButton, useUser } from "@clerk/clerk-react";
+import { useAuthContext } from "../../context/AuthContext";
 
 const DashboardNavigation = () => {
   const { isLoaded, user } = useUser();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const {  displayName } = useAuthContext();
 
   if (!isLoaded) return null;
 
   const getNavLinkClass = ({ isActive }) =>
     isActive
-      ? "text-indigo-600 font-semibold"
+      ? "text-white font-semibold py-3 px-5 bg-[#4F46E5] rounded-2xl "
       : "text-gray-600 hover:text-indigo-700";
 
   return (
@@ -24,7 +26,7 @@ const DashboardNavigation = () => {
         {/* Logo */}
         <NavLink to="/" >
         <div className="flex items-center gap-3">
-          <img src="/logo.svg" alt="Planora Logo" className="w-20 h-auto" />
+          <img src="/logo1.svg" alt="Planora Logo" className="h-10" />
         </div>
          </NavLink>
         {/* Links */}
@@ -48,7 +50,7 @@ const DashboardNavigation = () => {
           </span>
 
           <SignOutButton signOutCallback={() => navigate("/login")}>
-            <button className="flex items-center gap-2 px-4 py-2 text-white bg-indigo-600 rounded-md hover:bg-indigo-700">
+            <button className="flex items-center gap-2 px-4 py-2 text-white bg-indigo-600 rounded-xl hover:bg-indigo-700">
               <LogOut className="w-4 h-4" />
               Logout
             </button>
@@ -57,10 +59,10 @@ const DashboardNavigation = () => {
       </nav>
 
       {/* ================= MOBILE NAV ================= */}
-      <nav className="flex items-center justify-between px-4 py-3 bg-white shadow-md md:hidden">
+      <nav className="flex items-center justify-between px-4 py-3 mx-2 bg-white shadow-md md:hidden">
         
         {/* Logo */}
-        <img src="/logo.svg" alt="Planora Logo" className="w-16 h-auto" />
+        <img src="/logo1.svg" alt="Planora Logo" className="h-10" />
 
         {/* Hamburger */}
         <button onClick={() => setIsOpen(!isOpen)}>
@@ -70,7 +72,7 @@ const DashboardNavigation = () => {
 
       {/* ================= MOBILE MENU ================= */}
       {isOpen && (
-        <div className="p-4 mx-4 mt-2 space-y-4 bg-white shadow-lg md:hidden rounded-2xl">
+        <div className="flex flex-col p-4 mx-2 space-y-4 bg-white shadow-lg md:hidden rounded-b-3xl">
           
           <NavLink
             to="/dashboard"
@@ -100,9 +102,9 @@ const DashboardNavigation = () => {
           <hr />
 
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">
-              {user.firstName || user.username}
-            </span>
+            <span className="text-sm text-gray-700">
+                Welcome, {displayName}
+              </span>
 
             <SignOutButton signOutCallback={() => navigate("/login")}>
               <button className="flex items-center gap-2 px-4 py-2 text-white bg-indigo-600 rounded-md hover:bg-indigo-700">

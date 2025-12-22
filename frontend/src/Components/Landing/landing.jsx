@@ -51,11 +51,11 @@ function LandingPage() {
 
       <main>
         {/* HERO */}
-        <section className="flex items-center justify-center py-20 m-4 rounded-2xl bg-gradient-to-r from-blue-50 via-white to-blue-50 lg:h-[70vh]">
-          <div className="grid gap-12 px-4 max-w-7xl lg:grid-cols-2">
+        <section className="flex items-center justify-center py-20 m-4 rounded-3xl bg-gradient-to-t from-blue-200 via-white to-blue-200 lg:h-[70vh] font-sans ">
+          <div className="grid gap-12 px-4 max-w-7xl lg:grid-cols-2 ">
             {/* LEFT */}
-            <div>
-              <h1 className="text-4xl font-bold md:text-6xl">
+            <div className="">
+              <h1 className="text-4xl font-semibold md:text-6xl">
                 Revolutionize Your
                 <span className="text-indigo-600"> School Scheduling</span>
               </h1>
@@ -70,7 +70,7 @@ function LandingPage() {
                   <>
                     <Link
                       to="/profile"
-                      className="flex items-center justify-center px-8 py-4 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
+                      className="flex items-center justify-center px-8 py-4 text-white bg-indigo-600 rounded-3xl hover:bg-indigo-700"
                     >
                       Visit Profile
                       <ArrowRight className="w-5 h-5 ml-2" />
@@ -78,7 +78,7 @@ function LandingPage() {
 
                     <Link
                       to="/organisation"
-                      className="flex items-center justify-center px-8 py-4 text-indigo-600 border-2 border-indigo-600 rounded-lg hover:bg-indigo-50"
+                      className="flex items-center justify-center px-8 py-4 text-indigo-600 border-2 border-indigo-600 rounded-3xl hover:bg-indigo-50"
                     >
                       Manage Organization
                     </Link>
@@ -86,7 +86,7 @@ function LandingPage() {
                 ) : (
                   <Link
                     to="/signup"
-                    className="flex items-center justify-center px-8 py-4 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
+                    className="flex items-center justify-center px-8 py-4 text-white bg-indigo-600 rounded-3xl hover:bg-indigo-700"
                   >
                     Get Started Free
                     <ArrowRight className="w-5 h-5 ml-2" />
@@ -97,13 +97,13 @@ function LandingPage() {
 
             {/* RIGHT CARD */}
             <div className="relative">
-              <div className="p-6 bg-white shadow-2xl rounded-2xl rotate-3">
-                <div className="p-4 mb-4 bg-indigo-600 rounded-lg">
+              <div className="p-6 bg-white shadow-2xl rounded-3xl rotate-3">
+                <div className="p-4 mb-4 bg-indigo-600 rounded-xl">
                   <Calendar className="w-8 h-8 mx-auto text-white" />
                 </div>
 
                 <div className="space-y-3">
-                  <div className="p-3 bg-gray-100 rounded-lg">
+                  <div className="p-3 bg-gray-100 rounded-xl">
                     <span className="block text-sm font-medium">
                       Math – Room 204
                     </span>
@@ -112,7 +112,7 @@ function LandingPage() {
                     </span>
                   </div>
 
-                  <div className="p-3 bg-gray-100 rounded-lg">
+                  <div className="p-3 bg-gray-100 rounded-xl">
                     <span className="block text-sm font-medium">
                       Science – Lab 1
                     </span>
@@ -129,13 +129,13 @@ function LandingPage() {
         {/* FEATURES */}
         <section
           id="features"
-          className="flex items-center justify-center py-20 m-3 bg-[#4F46E5] rounded-2xl"
+          className="flex items-center justify-center py-20 m-3 bg-[#4F46E5] rounded-3xl"
         >
           <div className="grid gap-8 px-4 max-w-7xl md:grid-cols-2 lg:grid-cols-4">
             {features.map((feature, idx) => (
               <div
                 key={idx}
-                className="p-6 text-center bg-white shadow-lg rounded-xl"
+                className="p-6 text-center bg-white shadow-lg rounded-3xl"
               >
                 <div className="flex justify-center mb-4">
                   {feature.icon}

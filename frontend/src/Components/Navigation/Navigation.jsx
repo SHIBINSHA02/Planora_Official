@@ -10,20 +10,22 @@ const Navigation = () => {
   const { isSignedIn, loading, displayName } = useAuthContext();
 
   return (
-    <header className="sticky top-0 z-50 my-1 lg:w-2/3 lg:mx-auto rounded-2xl bg-white/50 backdrop-blur-2xl">
-      <div className="flex items-center justify-between h-16 px-4 mx-auto ">
+    <header className="sticky top-0 z-50 my-1 lg:w-2/3 lg:mx-auto ">
+      <div className="mx-2 bg-white rounded-b-3xl lg:m-0">
+      <div className="flex items-center justify-between h-16 px-4 mx-2 rounded-t-3xl lg:mx-auto lg:rounded-3xl">
+      
 
         {/* Logo */}
         <Link to="/" className="flex items-center">
-          <img src="/logo.svg" alt="Planora Logo" className="h-20" />
+          <img src="/logo1.svg" alt="Planora Logo" className="h-10" />
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden space-x-8 md:flex">
-          <a href="#features" className="hover:text-white  hover:bg-[#4F46E5] p-3 px-5 rounded-xl">
+        <nav className="hidden space-x-8 md:flex ">
+          <a href="#features" className="hover:text-white  hover:bg-[#4F46E5] p-3 px-5 rounded-2xl">
             Features
           </a>
-          <Link to="/" className=" hover:text-white  hover:bg-[#4F46E5] p-3 px-5 rounded-xl">
+          <Link to="/" className=" hover:text-white  hover:bg-[#4F46E5] p-3 px-5 rounded-2xl">
             Home
           </Link>
         </nav>
@@ -82,8 +84,8 @@ const Navigation = () => {
 
       {/* Mobile Menu */}
       {isMenuOpen && (
-        <div className="px-2 md:hidden">
-        <div className="bg-white shadow-lg rounded-b-3xl">
+        <div className="px-2 md:hidden ">
+        <div className="shadow-lg rounded-b-3xl ">
           <div className="px-4 py-2 space-y-3 ">
             <a href="#features" className="block text-gray-700">
               Features
@@ -119,6 +121,7 @@ const Navigation = () => {
         </div>
         </div>
       )}
+      </div>
     </header>
   );
 };

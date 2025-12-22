@@ -1,3 +1,4 @@
+// frontend/src/Components/Profile/profile.jsx
 import React from "react";
 import { Calendar, Clock, BookOpen, Users } from "lucide-react";
 
@@ -20,66 +21,66 @@ const Profile = () => {
   ];
 
   return (
-    <div className="min-h-screen p-6 bg-gray-50">
+    <div className="min-h-screen p-6 font-sans ">
       <div className="max-w-6xl mx-auto space-y-8">
 
         {/* ================= PROFILE HEADER ================= */}
-        <div className="p-6 bg-white shadow rounded-2xl">
-          <h1 className="text-2xl font-bold text-gray-800">
+        <div className="p-6 bg-white border border-blue-600 shadow rounded-3xl">
+          <h1 className="text-2xl font-semibold text-blue-600">
             Teacher Profile
           </h1>
 
           <div className="grid gap-6 mt-6 md:grid-cols-2">
             <div>
               <p className="text-sm text-gray-500">Name</p>
-              <p className="text-lg font-semibold">{teacher.name}</p>
+              <p className="text-lg font-medium">{teacher.name}</p>
             </div>
 
             <div>
               <p className="text-sm text-gray-500">Email</p>
-              <p className="text-lg font-semibold">{teacher.email}</p>
+              <p className="text-lg font-medium">{teacher.email}</p>
             </div>
 
             <div>
               <p className="text-sm text-gray-500">Subject</p>
-              <p className="text-lg font-semibold">{teacher.subject}</p>
+              <p className="text-lg font-medium">{teacher.subject}</p>
             </div>
 
             <div>
               <p className="text-sm text-gray-500">Department</p>
-              <p className="text-lg font-semibold">{teacher.department}</p>
+              <p className="text-lg font-medium">{teacher.department}</p>
             </div>
           </div>
         </div>
 
         {/* ================= WORKLOAD SUMMARY ================= */}
         <div className="grid gap-6 md:grid-cols-3">
-          <div className="p-5 bg-white shadow rounded-xl">
+          <div className="p-5 bg-white border border-blue-600 shadow rounded-3xl">
             <div className="flex items-center gap-3">
               <Calendar className="text-indigo-600" />
               <h3 className="font-semibold">Working Days</h3>
             </div>
-            <p className="mt-3 text-2xl font-bold">
+            <p className="mt-3 text-2xl font-semibold">
               {teacher.workingDays} days/week
             </p>
           </div>
 
-          <div className="p-5 bg-white shadow rounded-xl">
+          <div className="p-5 bg-white border border-blue-600 shadow rounded-3xl">
             <div className="flex items-center gap-3">
               <Clock className="text-indigo-600" />
               <h3 className="font-semibold">Periods</h3>
             </div>
-            <p className="mt-3 text-2xl font-bold">
+            <p className="mt-3 text-2xl font-semibold">
               {teacher.periodsPerWeek} / week
             </p>
           </div>
 
-          <div className="p-5 bg-white shadow rounded-xl">
+          <div className="p-5 bg-white border border-blue-600 shadow rounded-3xl">
             <div className="flex items-center gap-3">
               <Users className="text-indigo-600" />
               <h3 className="font-semibold">Classes Handled</h3>
             </div>
-            <p className="mt-3 text-2xl font-bold">
+            <p className="mt-3 text-2xl font-semibold">
               4 classes
             </p>
           </div>
@@ -117,7 +118,7 @@ const Profile = () => {
 
         {/* ================= SIMPLE CHART (VISUAL SUMMARY) ================= */}
         <div className="p-6 bg-white shadow rounded-2xl">
-          <h2 className="mb-4 text-xl font-semibold">
+          <h2 className="mb-4 text-xl font-medium">
             Teaching Load (Visual)
           </h2>
 
