@@ -15,8 +15,8 @@ const DashboardNavigation = () => {
 
   const getNavLinkClass = ({ isActive }) =>
     isActive
-      ? "text-white font-semibold py-3 px-5 bg-[#4F46E5] rounded-2xl "
-      : "text-gray-600 hover:text-indigo-700";
+      ? "  py-3 px-5 bg-indigo-50 text-indigo-600 rounded-2xl "
+      : "text-gray-600 hover:text-indigo-700 hover:bg-indigo-50 hover:text-indigo-600 py-3 px-5 rounded-2xl ";
 
   return (
     <>

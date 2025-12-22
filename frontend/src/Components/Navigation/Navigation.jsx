@@ -22,10 +22,10 @@ const Navigation = () => {
 
         {/* Desktop Nav */}
         <nav className="hidden space-x-8 md:flex ">
-          <a href="#features" className="hover:text-white  hover:bg-[#4F46E5] p-3 px-5 rounded-2xl">
+          <a href="#features" className="p-3 px-5 hover:bg-indigo-100 hover:text-indigo-600 rounded-2xl">
             Features
           </a>
-          <Link to="/" className=" hover:text-white  hover:bg-[#4F46E5] p-3 px-5 rounded-2xl">
+          <Link to="/" className="p-3 px-5 hover:bg-indigo-100 hover:text-indigo-600 rounded-2xl">
             Home
           </Link>
         </nav>
