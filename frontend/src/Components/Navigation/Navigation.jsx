@@ -11,7 +11,7 @@ const Navigation = () => {
 
   return (
     <header className="sticky top-0 z-50 my-1 lg:w-2/3 lg:mx-auto ">
-      <div className="mx-2 bg-white rounded-b-3xl lg:m-0">
+      <div className="mx-2 bg-white shadow-2xl rounded-b-3xl lg:m-0 shadow-blue-200">
       <div className="flex items-center justify-between h-16 px-4 mx-2 rounded-t-3xl lg:mx-auto lg:rounded-3xl">
       
 
