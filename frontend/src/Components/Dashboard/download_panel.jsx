@@ -13,17 +13,17 @@ const DownloadPanel = () => {
   };
 
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="flex flex-col gap-5 lg:flex-row">
       <button
         onClick={handleDownloadTeacherSchedule}
-        className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow"
+        className="px-6 py-3 font-semibold text-white transition-colors duration-200 bg-indigo-600 rounded-lg shadow hover:bg-indigo-700"
       >
         Download Teacher Schedule
       </button>
       
       <button
         onClick={handleDownloadClassSchedules}
-        className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow"
+        className="px-6 py-3 font-semibold text-white transition-colors duration-200 bg-indigo-600 rounded-lg shadow hover:bg-indigo-700"
       >
         Download Class Schedules
       </button>

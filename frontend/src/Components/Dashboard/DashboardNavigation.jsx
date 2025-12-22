@@ -41,8 +41,9 @@ const DashboardNavigation = () => {
 
         {/* User + Logout */}
         <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-600">
-            {user.firstName || user.username}
+          <span className="flex gap-1 text-sm text-gray-600">
+            <p className="text-blue-700">Hi</p> 
+            {`${user.firstName || user.username} ${user.lastName || user.username}`}
           </span>
 
           <SignOutButton signOutCallback={() => navigate("/login")}>

@@ -1,10 +1,11 @@
+// frontend/src/Components/Dashboard/dashboard.jsx
 import React from "react";
 import { Outlet } from "react-router-dom";
 import DashboardNavigation from "./DashboardNavigation";
 
 const Dashboard = () => {
   return (
-    <div className="items-center w-2/3 mx-auto ">
+    <div className="items-center mx-auto lg:w-2/3 ">
       {/* Dashboard Top Navigation */}
       <DashboardNavigation />
 
@@ -12,7 +13,7 @@ const Dashboard = () => {
       <main className="px-6 pb-6">
         {/* Default Dashboard Content */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">
+          <h1 className="text-2xl font-bold text-gray-800 mt-7">
             Dashboard Overview
           </h1>
         </div>
