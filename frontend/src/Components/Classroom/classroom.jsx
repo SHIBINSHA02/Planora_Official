@@ -13,19 +13,24 @@ const Classroom = () => {
 
   const [selectedClassroom, setSelectedClassroom] = useState(null);
 
-  /* ================= AUTO-SELECT FIRST CLASSROOM ================= */
+  /* ================= RESET ON ORG CHANGE ================= */
   useEffect(() => {
-    if (!loading && classrooms.length > 0) {
+    setSelectedClassroom(null);
+  }, [classrooms]);
+
+  /* ================= AUTO-SELECT FIRST ================= */
+  useEffect(() => {
+    if (!loading && classrooms.length > 0 && !selectedClassroom) {
       setSelectedClassroom(classrooms[0].classroomId);
     }
-  }, [classrooms, loading]);
+  }, [classrooms, loading, selectedClassroom]);
 
   /* ================= FETCH SCHEDULE ================= */
   useEffect(() => {
-    if (selectedClassroom) {
+    if (selectedClassroom && !schedules[selectedClassroom]) {
       fetchClassroomSchedule(selectedClassroom);
     }
-  }, [selectedClassroom, fetchClassroomSchedule]);
+  }, [selectedClassroom, schedules, fetchClassroomSchedule]);
 
   /* ================= STATES ================= */
   if (loading) {

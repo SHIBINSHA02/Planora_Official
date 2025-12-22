@@ -1,5 +1,5 @@
 // backend/controllers/classroomController.js
-const { Classroom } = require('../models/classroomModel');
+const  Classroom  = require('../models/classroomModel');
 const ScheduleSlot = require('../models/ScheduleSlot');
 
 /* ================= CREATE ================= */

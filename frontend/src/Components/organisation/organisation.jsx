@@ -80,7 +80,7 @@ const OrganisationOnboarding = () => {
   }
 
   return (
-    <div className="min-h-screen px-4 py-8 bg-gray-50">
+    <div className="min-h-screen px-4 py-8 m-2 border border-blue-300 lg:m-10 rounded-3xl bg-slate-100/90">
       <div className="max-w-6xl mx-auto">
 
         {/* Header */}
