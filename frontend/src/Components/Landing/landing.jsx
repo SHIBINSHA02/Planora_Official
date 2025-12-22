@@ -11,7 +11,7 @@ import {
 import { useUser } from "@clerk/clerk-react";
 import Navigation from "../Navigation/Navigation";
 import Footer from "../Footer/Footer";
-
+import Connect from "./Connect";
 function LandingPage() {
   const { isSignedIn, isLoaded } = useUser();
 
@@ -128,26 +128,45 @@ function LandingPage() {
 
         {/* FEATURES */}
         <section
-          id="features"
-          className="flex items-center justify-center py-20 m-3 bg-[#4F46E5] rounded-3xl"
-        >
-          <div className="grid gap-8 px-4 max-w-7xl md:grid-cols-2 lg:grid-cols-4">
-            {features.map((feature, idx) => (
-              <div
-                key={idx}
-                className="p-6 text-center bg-white shadow-lg rounded-3xl"
-              >
-                <div className="flex justify-center mb-4">
-                  {feature.icon}
-                </div>
-                <h3 className="mb-2 text-xl font-semibold">
-                  {feature.title}
-                </h3>
-                <p className="text-gray-600">{feature.description}</p>
+            id="features"
+            className="py-16 mx-3 rounded-3xl"
+          >
+            <div className="px-4 mx-auto max-w-7xl">
+              <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2">
+                {features.map((feature, idx) => (
+                  <div
+                    key={idx}
+                    className="flex flex-col items-center gap-5 p-6 text-center transition-shadow bg-white border border-blue-600 shadow-lg rounded-3xl sm:flex-row sm:text-left hover:shadow-xl"
+                  >
+                    {/* ===== Avatar / Icon ===== */}
+                    <div className="flex items-center justify-center flex-shrink-0 w-16 h-16 overflow-hidden bg-indigo-100 rounded-full">
+                      {feature.avatar ? (
+                        <img
+                          src={feature.avatar}
+                          alt={feature.title}
+                          className="object-cover w-full h-full"
+                        />
+                      ) : (
+                        feature.icon
+                      )}
+                    </div>
+
+                    {/* ===== Text ===== */}
+                    <div className="flex flex-col">
+                      <h3 className="mb-1 text-lg font-semibold sm:text-xl">
+                        {feature.title}
+                      </h3>
+                      <p className="text-sm text-gray-600 sm:text-base">
+                        {feature.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </section>
+            </div>
+          </section>
+
+        <Connect/>
         <Footer/>
       </main>
     </div>
