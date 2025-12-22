@@ -1,3 +1,4 @@
+// frontend/src/context/ClassroomContext.jsx
 import React, { createContext, useEffect, useState } from "react";
 import axios from "axios";
 import { useOrganisationContext } from "./useOrganisationContext";
@@ -13,24 +14,31 @@ export const ClassroomProvider = ({ children }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!organisationId) return;
+    if (!organisationId) {
+      setClassrooms([]);
+      return;
+    }
 
-    setLoading(true);
-    setError(null);
+    const fetchClassrooms = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-    axios
-      .get("/api/classrooms", {
-        params: { organisationId },
-        withCredentials: true,
-      })
-      .then((res) => {
+        const res = await axios.get("/api/classrooms", {
+          params: { organisationId },
+          withCredentials: true,
+        });
+
         setClassrooms(res.data?.data || []);
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error("Failed to fetch classrooms", err);
         setError("Failed to load classrooms");
-      })
-      .finally(() => setLoading(false));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchClassrooms();
   }, [organisationId]);
 
   return (

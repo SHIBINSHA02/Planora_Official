@@ -1,38 +1,49 @@
+// frontend/src/Components/Classroom/classroom.jsx
 import React, { useEffect, useState } from "react";
 import ClassroomScheduleView from "./ClassroomScheduleView";
 
-import { useClassroom } from "../../context/useClassroom";
+import { useClassroomContext } from "../../context/useClassroomContext";
 import { useTeacher } from "../../context/useTeacher";
 import { useSchedule } from "../../context/useSchedule";
 
 const Classroom = () => {
-  const { classrooms } = useClassroom();
+  const { classrooms, loading } = useClassroomContext();
   const { teachers } = useTeacher();
   const { schedules, fetchClassroomSchedule, updateSlot } = useSchedule();
 
-  const [selectedClassroom, setSelectedClassroom] = useState("");
+  const [selectedClassroom, setSelectedClassroom] = useState(null);
 
-  // Auto-select first classroom
+  /* ================= AUTO-SELECT FIRST CLASSROOM ================= */
   useEffect(() => {
-    if (classrooms.length > 0) {
+    if (!loading && classrooms.length > 0) {
       setSelectedClassroom(classrooms[0].classroomId);
     }
-  }, [classrooms]);
+  }, [classrooms, loading]);
 
-  // Fetch schedule when classroom changes
+  /* ================= FETCH SCHEDULE ================= */
   useEffect(() => {
     if (selectedClassroom) {
       fetchClassroomSchedule(selectedClassroom);
     }
   }, [selectedClassroom, fetchClassroomSchedule]);
 
+  /* ================= STATES ================= */
+  if (loading) {
+    return <p className="p-6">Loading classrooms...</p>;
+  }
+
+  if (classrooms.length === 0) {
+    return <p className="p-6">No classrooms available</p>;
+  }
+
   return (
-    <div className="p-6">
-      {/* Classroom Selector */}
+    <div className="p-6 space-y-4">
+      
+      {/* ================= CLASSROOM SELECT ================= */}
       <select
-        value={selectedClassroom}
+        value={selectedClassroom || ""}
         onChange={(e) => setSelectedClassroom(e.target.value)}
-        className="p-2 mb-4 border rounded"
+        className="p-2 border rounded"
       >
         {classrooms.map((cls) => (
           <option key={cls.classroomId} value={cls.classroomId}>
@@ -41,7 +52,7 @@ const Classroom = () => {
         ))}
       </select>
 
-      {/* Schedule View */}
+      {/* ================= SCHEDULE VIEW ================= */}
       {selectedClassroom && schedules[selectedClassroom] && (
         <ClassroomScheduleView
           classroomId={selectedClassroom}
