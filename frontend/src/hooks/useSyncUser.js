@@ -4,7 +4,7 @@ import { useAuth, useUser } from "@clerk/clerk-react";
 
 /**
  * Sync Clerk user → backend DB user
- * Returns the DB user via callback
+ * Calls onUserSynced(dbUser) if provided
  */
 export function useSyncUser(onUserSynced) {
   const { isLoaded, isSignedIn, getToken } = useAuth();
@@ -13,10 +13,10 @@ export function useSyncUser(onUserSynced) {
   const hasSyncedRef = useRef(false);
 
   useEffect(() => {
-    // Wait for Clerk
+    // Wait for Clerk to load
     if (!isLoaded) return;
 
-    // Not signed in → do nothing
+    // Not signed in → reset sync flag
     if (!isSignedIn || !clerkUser) {
       hasSyncedRef.current = false;
       return;
@@ -47,7 +47,11 @@ export function useSyncUser(onUserSynced) {
 
         const dbUser = await res.json();
 
-        onUserSynced(dbUser);
+        // ✅ SAFETY CHECK (THIS FIXES YOUR ERROR)
+        if (typeof onUserSynced === "function") {
+          onUserSynced(dbUser);
+        }
+
         hasSyncedRef.current = true;
       } catch (err) {
         console.error("User sync failed:", err);

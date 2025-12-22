@@ -1,7 +1,10 @@
+// frontend/src/Components/organisation/organisation.jsx
 import React, { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { SignOutButton } from "@clerk/clerk-react";
 import { useAuthContext } from "../../context/AuthContext";
+import { useOrganisationContext } from "../../context/useOrganisationContext";
+
 
 /* ================= ICONS ================= */
 const Menu = ({ className }) => (
@@ -42,7 +45,9 @@ const Header = ({ isMenuOpen, setIsMenuOpen }) => {
         <div className="items-center hidden gap-4 md:flex">
           {!loading && isSignedIn && (
             <>
-              <span className="text-sm text-gray-600">Hi, {displayName}</span>
+              <span className="text-sm text-gray-600">
+                Hi, {displayName}
+              </span>
               <SignOutButton>
                 <button className="text-gray-500 hover:text-red-600">
                   <LogOut className="w-5 h-5" />
@@ -60,35 +65,15 @@ const Header = ({ isMenuOpen, setIsMenuOpen }) => {
   );
 };
 
-/* ================= DATA ================= */
-const TEMP_ORGANISATIONS = [
-  { id: 1, name: "Greenwood High School", location: "Springfield, IL", email: "admin@greenwood.edu" },
-  { id: 2, name: "Northside Prep Academy", location: "Metropolis, NY", email: "contact@northside.org" },
-];
-
-/* ================= MODAL ================= */
-const CreateOrganisationModal = ({ open, onClose, onCreate }) => {
+/* ================= MODAL (UI ONLY FOR NOW) ================= */
+const CreateOrganisationModal = ({ open, onClose }) => {
   const [name, setName] = useState("");
-  const [location, setLocation] = useState("");
-  const [email, setEmail] = useState("");
 
   if (!open) return null;
 
   const submit = (e) => {
     e.preventDefault();
-    if (!name.trim() || !email.trim()) return;
-
-    onCreate({
-      id: Date.now(),
-      name: name.trim(),
-      location: location.trim(),
-      email: email.trim(),
-    });
-
-    setName("");
-    setLocation("");
-    setEmail("");
-    onClose();
+    onClose(); // backend wiring later
   };
 
   return (
@@ -111,20 +96,6 @@ const CreateOrganisationModal = ({ open, onClose, onCreate }) => {
             onChange={(e) => setName(e.target.value)}
           />
 
-          <input
-            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
-            placeholder="Location"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-          />
-
-          <input
-            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
-            placeholder="Admin Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-
           <button className="w-full py-2 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">
             Create Organisation
           </button>
@@ -136,14 +107,40 @@ const CreateOrganisationModal = ({ open, onClose, onCreate }) => {
 
 /* ================= PAGE CONTENT ================= */
 const OrganisationOnboarding = () => {
-  const [organisations, setOrganisations] = useState(TEMP_ORGANISATIONS);
+  const {
+    organisations,
+    activeOrganisation,
+    setActiveOrganisation,
+    loading,
+    error,
+  } = useOrganisationContext();
+
   const [open, setOpen] = useState(false);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <p className="text-gray-500">Loading organisations...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <p className="text-red-500">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen px-4 py-8 bg-gray-50">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="font-sans text-3xl font-medium">Organisations</h1>
+          <h1 className="font-sans text-3xl font-medium">
+            Organisations
+          </h1>
+
           <button
             onClick={() => setOpen(true)}
             className="px-5 py-2 text-white bg-indigo-600 rounded-lg shadow hover:bg-indigo-700"
@@ -152,24 +149,49 @@ const OrganisationOnboarding = () => {
           </button>
         </div>
 
-        <div className="grid gap-5 md:grid-cols-2">
-          {organisations.map((org) => (
-            <div
-              key={org.id}
-              className="p-5 transition bg-white shadow-sm rounded-xl hover:shadow-md"
-            >
-              <h3 className="text-lg font-semibold">{org.name}</h3>
-              <p className="text-sm text-gray-600">{org.location}</p>
-              <p className="text-sm text-gray-500">{org.email}</p>
-            </div>
-          ))}
-        </div>
+        {organisations.length === 0 ? (
+          <div className="p-10 text-center bg-white shadow-sm rounded-xl">
+            <p className="text-gray-600">
+              You don’t belong to any organisation yet.
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-5 md:grid-cols-2">
+            {organisations.map((org) => (
+              <div
+                key={org._id}
+                onClick={() => setActiveOrganisation(org)}
+                className={`p-5 cursor-pointer transition rounded-xl shadow-sm hover:shadow-md
+                  ${
+                    activeOrganisation?.organisationId === org.organisationId
+                      ? "border-2 border-indigo-600 bg-indigo-50"
+                      : "bg-white"
+                  }`}
+              >
+                <h3 className="text-lg font-semibold">
+                  {org.organisationName}
+                </h3>
+
+                <p className="text-sm text-gray-600">
+                  Org ID: {org.organisationId}
+                </p>
+
+                <p className="text-sm text-gray-500">
+                  Admin: {org.adminName}
+                </p>
+
+                <p className="mt-2 text-xs text-gray-400">
+                  {org.workingDays} days · {org.periodsPerDay} periods/day
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <CreateOrganisationModal
         open={open}
         onClose={() => setOpen(false)}
-        onCreate={(org) => setOrganisations((prev) => [org, ...prev])}
       />
     </div>
   );
@@ -186,7 +208,10 @@ const OrganisationPage = () => {
 
   return (
     <>
-      <Header isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
+      <Header
+        isMenuOpen={isMenuOpen}
+        setIsMenuOpen={setIsMenuOpen}
+      />
       <OrganisationOnboarding />
     </>
   );

@@ -1,5 +1,4 @@
-// backend/middleware/requireAuth.js
-const { verifyToken } = require("@clerk/clerk-sdk-node");
+const { verifyToken } = require("@clerk/backend");
 
 module.exports = async function requireAuth(req, res, next) {
   try {
@@ -12,18 +11,17 @@ module.exports = async function requireAuth(req, res, next) {
     const token = authHeader.split(" ")[1];
 
     const payload = await verifyToken(token, {
-      secretKey: process.env.CLERK_SECRET_KEY
+      secretKey: process.env.CLERK_SECRET_KEY,
     });
 
-    // Attach user identity to request
+    // Attach user to request
     req.auth = {
       clerkUserId: payload.sub,
-      sessionId: payload.sid
     };
 
     next();
   } catch (err) {
-    console.error("Auth error:", err.message);
-    res.status(401).json({ message: "Unauthorized" });
+    console.error("Auth error:", err);
+    return res.status(401).json({ message: "Unauthorized" });
   }
 };

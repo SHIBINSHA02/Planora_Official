@@ -18,6 +18,14 @@ const OrganisationSchema = new mongoose.Schema({
     periodsPerDay: {
         type: Number,
         default: 6
+    },
+    adminName:{
+        type:String,
+        required:true
+    },
+    editors:{
+        type:[String],
+        default:[]
     }
 }, { timestamps: true });
 

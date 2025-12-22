@@ -1,3 +1,4 @@
+// backend/models/User.js
 // backend/models/auth.js
 const mongoose = require("mongoose");
 

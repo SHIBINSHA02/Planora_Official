@@ -1,20 +1,70 @@
-// frontend/src/context/OrganisationContext.jsx
+import React, { createContext, useEffect, useState } from "react";
+import { useAuth } from "@clerk/clerk-react";
 
-// frontend/src/context/OrganisationContext.jsx
-import React, { createContext, useContext, useState } from "react";
-
-const OrganisationContext = createContext(null);
+/**
+ * ✅ CONTEXT MUST BE EXPORTED
+ */
+export const OrganisationContext = createContext(null);
 
 export const OrganisationProvider = ({ children }) => {
-    // 1. Move to state so it can be changed
-    const [organisationId, setOrganisationId] = useState("ORG1");
+  const { isSignedIn, getToken } = useAuth();
 
-    return (
-        // 2. Include the setter function in the Provider value
-        <OrganisationContext.Provider value={{ organisationId, setOrganisationId }}>
-            {children}
-        </OrganisationContext.Provider>
-    );
+  const [organisations, setOrganisations] = useState([]);
+  const [activeOrganisation, setActiveOrganisation] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!isSignedIn) {
+      setOrganisations([]);
+      setActiveOrganisation(null);
+      setLoading(false);
+      return;
+    }
+
+    const fetchOrganisations = async () => {
+      try {
+        const token = await getToken();
+
+        const res = await fetch(
+          "/api/organisations/my-organisations",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!res.ok) {
+          throw new Error("Unauthorized");
+        }
+
+        const data = await res.json();
+
+        setOrganisations(data.organisations || []);
+        setActiveOrganisation(data.organisations?.[0] || null);
+      } catch (err) {
+        console.error("Organisation fetch failed:", err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrganisations();
+  }, [isSignedIn, getToken]);
+
+  return (
+    <OrganisationContext.Provider
+      value={{
+        organisations,
+        activeOrganisation,
+        setActiveOrganisation,
+        loading,
+        error,
+      }}
+    >
+      {children}
+    </OrganisationContext.Provider>
+  );
 };
-
-export const useOrganisation = () => useContext(OrganisationContext);

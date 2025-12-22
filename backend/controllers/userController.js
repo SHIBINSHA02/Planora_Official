@@ -1,3 +1,4 @@
+// backend/controllers/userController.js
 const User = require("../models/User");
 
 exports.syncUser = async (req, res) => {

@@ -1,14 +1,22 @@
+// frontend/src/Components/Teacher/teacher.jsx
 import React, { useEffect, useState } from "react";
 import TeacherScheduleTable from "../tables/TeacherScheduleTable";
-import { useTeachers } from "../../context/TeacherContext";
-import { useSchedule } from "../../context/ScheduleContext";
+import { useTeacher } from "../../context/useTeacher";
+import { useSchedule } from "../../context/useSchedule";
 
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-const periods = ["Period 1", "Period 2", "Period 3", "Period 4", "Period 5", "Period 6"];
+const periods = [
+  "Period 1",
+  "Period 2",
+  "Period 3",
+  "Period 4",
+  "Period 5",
+  "Period 6",
+];
 
 const Teacher = () => {
-  const { teachers } = useTeachers();
-  const { fetchTeacherSchedule } = useSchedule();
+  const { teachers } = useTeacher(); // ✅ fixed
+  const { fetchTeacherSchedule } = useSchedule(); // ✅ fixed
 
   const [selectedTeacherId, setSelectedTeacherId] = useState("");
   const [scheduleGrid, setScheduleGrid] = useState([]);
@@ -28,7 +36,7 @@ const Teacher = () => {
 
         const slots = await fetchTeacherSchedule(selectedTeacherId);
 
-        // Convert ScheduleSlot[] → 5x6 grid
+        // Convert slots → 5x6 grid
         const grid = Array.from({ length: 5 }, () =>
           Array.from({ length: 6 }, () => [])
         );
@@ -38,7 +46,6 @@ const Teacher = () => {
         }
 
         setScheduleGrid(grid);
-
       } catch (err) {
         console.error(err);
         setError("Failed to load teacher schedule");
@@ -48,21 +55,24 @@ const Teacher = () => {
     };
 
     loadSchedule();
-  }, [selectedTeacherId]);
+  }, [selectedTeacherId, fetchTeacherSchedule]);
 
   return (
-    <div className="p-6 min-h-full">
-      <h1 className="text-xl font-semibold mb-6">Teacher Schedule Viewer</h1>
+    <div className="min-h-full p-6">
+      <h1 className="mb-6 text-xl font-semibold">
+        Teacher Schedule Viewer
+      </h1>
 
       {/* Teacher Dropdown */}
       <select
         value={selectedTeacherId}
         onChange={(e) => setSelectedTeacherId(e.target.value)}
-        className="border p-2 rounded mb-6"
+        className="p-2 mb-6 border rounded"
       >
         <option value="" disabled>
           -- Select a teacher --
         </option>
+
         {teachers.map((t) => (
           <option key={t.teacherId} value={t.teacherId}>
             {t.teacherName}
@@ -78,7 +88,9 @@ const Teacher = () => {
           scheduleData={
             scheduleGrid.length
               ? scheduleGrid
-              : Array(5).fill(Array(6).fill([]))
+              : Array.from({ length: 5 }, () =>
+                  Array.from({ length: 6 }, () => [])
+                )
           }
           days={days}
           periods={periods}

@@ -1,32 +1,47 @@
-// frontend/src/context/ClassroomContext.jsx
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useEffect, useState } from "react";
 import axios from "axios";
-import { useOrganisation } from "./OrganisationContext";
+import { useOrganisationContext } from "./useOrganisationContext";
 
-const ClassroomContext = createContext(null);
+export const ClassroomContext = createContext(null);
 
 export const ClassroomProvider = ({ children }) => {
-    const { organisationId } = useOrganisation();
-    const [classrooms, setClassrooms] = useState([]);
-    const [loading, setLoading] = useState(false);
+  const { activeOrganisation } = useOrganisationContext();
+  const organisationId = activeOrganisation?.organisationId;
 
-    useEffect(() => {
-        if (!organisationId) return;
+  const [classrooms, setClassrooms] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-        setLoading(true);
-        axios.get("/api/classrooms", {
-            params: { organisationId },
-            withCredentials: true
-        })
-            .then(res => setClassrooms(res.data.data || []))
-            .finally(() => setLoading(false));
-    }, [organisationId]);
+  useEffect(() => {
+    if (!organisationId) return;
 
-    return (
-        <ClassroomContext.Provider value={{ classrooms, loading }}>
-            {children}
-        </ClassroomContext.Provider>
-    );
+    setLoading(true);
+    setError(null);
+
+    axios
+      .get("/api/classrooms", {
+        params: { organisationId },
+        withCredentials: true,
+      })
+      .then((res) => {
+        setClassrooms(res.data?.data || []);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch classrooms", err);
+        setError("Failed to load classrooms");
+      })
+      .finally(() => setLoading(false));
+  }, [organisationId]);
+
+  return (
+    <ClassroomContext.Provider
+      value={{
+        classrooms,
+        loading,
+        error,
+      }}
+    >
+      {children}
+    </ClassroomContext.Provider>
+  );
 };
-
-export const useClassrooms = () => useContext(ClassroomContext);

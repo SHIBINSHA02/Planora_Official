@@ -29,6 +29,8 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true // ESSENTIAL because your frontend uses withCredentials: true
 }));// No config object - allows all origins ('*')
+const organisationRoutes = require("./routes/organisationRoutes");
+
 
 app.use(express.json());
 app.use(morgan('dev'));
@@ -38,6 +40,7 @@ app.use('/api/auth',auth)
 app.use('/api/teachers', teacherRoutes);
 app.use('/api/classrooms', classroomRoutes);
 app.use('/automate', automate)
+app.use("/api/organisations", organisationRoutes);
 
 // Socket.IO setup
 const io = new Server(server, {
