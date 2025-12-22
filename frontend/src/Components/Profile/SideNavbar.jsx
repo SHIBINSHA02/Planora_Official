@@ -57,10 +57,10 @@ export const SideNavbar = () => {
         {/* Header */}
         <div className="flex items-center justify-between p-4 md:block">
           <div>
-            <h1 className="text-xl font-bold text-indigo-600">
-              Teacher Panel
-            </h1>
-            <p className="text-sm text-gray-500">
+             <Link to="/" className="flex items-center">
+              <img src="/logo1.svg" alt="Planora Logo" className="h-10" />
+            </Link>
+            <p className="text-sm text-center text-gray-500">
               Timetable Scheduler
             </p>
           </div>
