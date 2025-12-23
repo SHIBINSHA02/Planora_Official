@@ -234,7 +234,7 @@ const ClassOnboarding = () => {
 
   // --- Render UI ---
   return (
-    <div className="p-6 max-w-2xl mx-auto  rounded-xl ">
+    <div className=" rounded-xl">
       
 
       {submissionMessage && (
@@ -259,7 +259,7 @@ const ClassOnboarding = () => {
             value={className}
             onChange={e => setClassName(e.target.value)}
             placeholder="e.g., 9th Grade - Section A"
-            className="w-full rounded-md bg-white border border-gray-300 px-4 py-2 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 shadow-sm"
+            className="w-full px-4 py-2 text-gray-900 placeholder-gray-400 bg-white border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600"
           />
         </div>
 
@@ -274,14 +274,14 @@ const ClassOnboarding = () => {
             value={adminEmail}
             onChange={e => setAdminEmail(e.target.value)}
             placeholder="administrator@school.edu"
-            className="w-full rounded-md bg-white border border-gray-300 px-4 py-2 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 shadow-sm"
+            className="w-full px-4 py-2 text-gray-900 placeholder-gray-400 bg-white border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600"
           />
         </div>
 
         {/* Assignment Section */}
-        <div className="border border-gray-200 p-4 rounded-lg bg-white shadow-inner">
-          <h3 className="text-md font-semibold text-indigo-600 mb-4">Assign Teacher & Hours</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
+        <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-inner">
+          <h3 className="mb-4 font-semibold text-indigo-600 text-md">Assign Teacher & Hours</h3>
+          <div className="grid items-end grid-cols-1 gap-4 sm:grid-cols-4">
             <div className="space-y-2 sm:col-span-2">
               <label htmlFor="teacherName" className="block text-sm font-medium text-gray-700">
                 Teacher
@@ -290,7 +290,7 @@ const ClassOnboarding = () => {
                 id="teacherName"
                 value={teacherName}
                 onChange={e => setTeacherName(e.target.value)}
-                className="w-full rounded-md bg-white border border-gray-300 px-4 py-2 pr-8 focus:ring-2 focus:ring-indigo-600 shadow-sm"
+                className="w-full px-4 py-2 pr-8 bg-white border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-600"
               >
                 <option value="">Select a teacher</option>
                 {teacherNames.map(t => (
@@ -334,16 +334,16 @@ const ClassOnboarding = () => {
                 value={count}
                 onChange={e => setCount(e.target.value)}
                 placeholder="e.g. 4"
-                className="w-full rounded-md border border-gray-300 px-4 py-2 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-600 shadow-sm"
+                className="w-full px-4 py-2 text-gray-900 placeholder-gray-400 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-600"
               />
             </div>
           </div>
 
-          <div className="pt-4 flex justify-end">
+          <div className="flex justify-end pt-4">
             <button
               type="button"
               onClick={handleAddTeacher}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded-lg transition-all duration-200 shadow-md"
+              className="px-6 py-2 font-semibold text-white transition-all duration-200 bg-indigo-600 rounded-lg shadow-md hover:bg-indigo-700"
             >
               Add Assignment
             </button>
@@ -353,15 +353,15 @@ const ClassOnboarding = () => {
         {/* Display Assigned Teachers */}
         {assignedTeachers.length > 0 && (
           <div className="pt-2">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">
+            <h3 className="mb-3 text-sm font-semibold text-gray-700">
               Current Assignments ({assignedTeachers.length})
             </h3>
-            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-inner">
+            <div className="overflow-hidden bg-white border border-gray-200 rounded-lg shadow-inner">
               <ul className="divide-y divide-gray-100">
                 {assignedTeachers.map((t, idx) => (
                   <li
                     key={`${t.teacherName}-${t.subject}-${idx}`}
-                    className="flex justify-between items-center p-3 text-sm hover:bg-gray-50"
+                    className="flex items-center justify-between p-3 text-sm hover:bg-gray-50"
                   >
                     <span className="font-medium text-gray-800">
                       {t.teacherName}
@@ -373,7 +373,7 @@ const ClassOnboarding = () => {
                     <button
                       type="button"
                       onClick={() => handleRemoveTeacher(idx)}
-                      className="text-red-500 hover:text-red-700 text-lg ml-4"
+                      className="ml-4 text-lg text-red-500 hover:text-red-700"
                       title="Remove assignment"
                     >
                       &times;

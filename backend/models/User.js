@@ -1,0 +1,33 @@
+// backend/models/User.js
+// backend/models/auth.js
+const mongoose = require("mongoose");
+
+const userSchema = new mongoose.Schema({
+  clerkUserId: {
+    type: String,
+    required: true,
+    unique: true,
+    index: true
+  },
+
+  name: String,
+  email: String,
+
+  role: {
+    type: String,
+    enum: ["ADMIN", "TEACHER", "STAFF"],
+    default: "STAFF"
+  },
+
+  organisationId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Organisation"
+  },
+
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+module.exports = mongoose.model("User", userSchema);

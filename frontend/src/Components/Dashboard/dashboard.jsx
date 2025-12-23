@@ -1,60 +1,26 @@
 // frontend/src/Components/Dashboard/dashboard.jsx
-import React from 'react';
-// Import components from React Router
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import React from "react";
+import { Outlet } from "react-router-dom";
+import DashboardNavigation from "./DashboardNavigation";
 
-// The Dashboard now accepts the `onLogout` prop from App.jsx
-const Dashboard = ({ onLogout }) => {
-  const navigate = useNavigate();
-
-  // We no longer need the 'activeTab' state. The URL is the source of truth.
-  // We no longer need the 'initialTab' prop.
-
-  const handleLogoutClick = () => {
-    if (onLogout) {
-      onLogout(); // This clears localStorage and updates App state
-    }
-    navigate('/login'); // Redirect to the login page
-  };
-
-  // This function is used by NavLink to apply styles to the active link
-  const getNavLinkClass = ({ isActive }) =>
-    isActive ? 'text-indigo-600 font-semibold' : 'text-gray-600 hover:text-indigo-700';
-
+const Dashboard = () => {
   return (
-    <div className="min-h-screen ">
-      <div className="max-w-7xl mx-auto ">
-        <nav className="flex items-center justify-between px-6 py-4  bg-white m-8 shadow-blue-200 shadow-lg  rounded-3xl">
-          <div className="flex items-center gap-3">
-            <img src="/logo.svg" alt="Logo" className="h-auto w-20" />
-          </div>
-          <div className="flex items-center gap-6 ">
-            {/* Replace <a> tags with <NavLink> */}
-            <NavLink to="/dashboard" className={getNavLinkClass} end>
-              Dashboard
-            </NavLink>
-            <NavLink to="/dashboard/classroom" className={getNavLinkClass}>
-              Classroom
-            </NavLink>
-            <NavLink to="/dashboard/teacher" className={getNavLinkClass}>
-              Teacher
-            </NavLink>
-          </div>
-          <div className="flex items-center">
-            <button
-              onClick={handleLogoutClick}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-md"
-            >
-              Logout
-            </button>
-          </div>
-        </nav>
+    <div className="items-center mx-auto lg:w-2/3 ">
+      {/* Dashboard Top Navigation */}
+      <DashboardNavigation />
 
-        <main className="p-6">
-          {/* Outlet is the placeholder for nested route content */}
-          <Outlet />
-        </main>
-      </div>
+      {/* Main Content */}
+      <main className="px-6 pb-6">
+        {/* Default Dashboard Content */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-800 mt-7">
+            Dashboard Overview
+          </h1>
+        </div>
+
+        {/* Nested Routes Render Here */}
+        <Outlet />
+      </main>
     </div>
   );
 };

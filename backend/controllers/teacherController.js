@@ -1,152 +1,167 @@
 // backend/controllers/teacherController.js
-const { Teacher } = require('../models/Teacher');
+
+const Teacher = require('../models/Teacher');
+
+const ScheduleSlot = require('../models/ScheduleSlot');
+const Counter = require('../models/counter');
 const EventEmitter = require('events');
 
 const teacherEmitter = new EventEmitter();
 exports.teacherEmitter = teacherEmitter;
 
-const Counter = require('../models/counter');
+/* ================= ID GENERATOR ================= */
 
 const generateTeacherId = async () => {
     const counter = await Counter.findOneAndUpdate(
-        { _id: 'teacherid' },               // Identify the sequence
-        { $inc: { sequence_value: 1 } },    // Atomically increment
-        { new: true, upsert: true }         // Create if doesn't exist
+        { _id: 'teacherid' },
+        { $inc: { sequence_value: 1 } },
+        { new: true, upsert: true }
     );
-
     return `T-${counter.sequence_value}`;
 };
 
-// POST /api/teachers - Create a new teacher
+/* ================= CREATE ================= */
+
 exports.createTeacher = async (req, res) => {
     try {
-        const { teachername, mailid, subjects } = req.body;
+        const { organisationId, teachername, mailid, subjects } = req.body;
 
-        if (!teachername || !mailid || !subjects || subjects.length === 0) {
-            return res.status(400).json({ message: "Missing required fields: teachername, mailid, or subjects." });
+        if (!organisationId || !teachername || !mailid || !subjects?.length) {
+            return res.status(400).json({
+                message: "organisationId, teachername, mailid, subjects are required"
+            });
         }
 
         const teacherid = await generateTeacherId();
 
-        const newTeacher = new Teacher({
-            teacherid,
-            teachername,
-            mailid,
-            subjects,
+        const teacher = await Teacher.create({
+            organisationId,
+            teacherId: teacherid,
+            teacherName: teachername,
+            email: mailid,
+            subjects
         });
 
-        const savedTeacher = await newTeacher.save();
-
-        // Emit event for socket broadcast
-        teacherEmitter.emit('teacher_created', savedTeacher);
+        teacherEmitter.emit('teacher_created', teacher);
 
         res.status(201).json({
-            message: "Teacher created successfully.",
-            teacher: savedTeacher
+            message: "Teacher created successfully",
+            teacher
         });
 
     } catch (error) {
         if (error.code === 11000) {
-            return res.status(409).json({ message: "A teacher with this Mail ID or Teacher ID already exists." });
+            return res.status(409).json({
+                message: "Teacher with this email or ID already exists"
+            });
         }
-        console.error('Error creating teacher:', error);
-        res.status(500).json({ message: "Server error during teacher creation." });
+        res.status(500).json({ message: "Server error", error });
     }
 };
 
-// GET /api/teachers - Retrieve all teachers
+/* ================= READ (ORG SCOPED) ================= */
+
 exports.getAllTeachers = async (req, res) => {
     try {
-        const teachers = await Teacher.find();
+        const { organisationId } = req.query;
+
+        if (!organisationId) {
+            return res.status(400).json({
+                message: "organisationId is required"
+            });
+        }
+
+        const teachers = await Teacher.find({ organisationId });
         res.status(200).json(teachers);
-    } catch (err) {
-        res.status(500).json({ message: "Error fetching teachers", details: err.message });
+
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching teachers" });
     }
 };
 
-// GET /api/teachers/:id - Retrieve a single teacher by MongoDB _id
 exports.getTeacherById = async (req, res) => {
     try {
-        const teacher = await Teacher.findById(req.params.id);
-        if (!teacher) return res.status(404).json({ message: "Teacher not found" });
+        const { teacherid } = req.params;
+        const { organisationId } = req.query;
+
+        const teacher = await Teacher.findOne({ teacherId: teacherid, organisationId });
+
+        if (!teacher) {
+            return res.status(404).json({ message: "Teacher not found" });
+        }
+
         res.status(200).json(teacher);
-    } catch (err) {
-        res.status(500).json({ message: "Error fetching teacher", details: err.message });
+
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching teacher" });
     }
 };
 
 
 
-// PUT /api/teachers/:teacherid - Update a teacher's information
 exports.updateTeacher = async (req, res) => {
     try {
         const { teacherid } = req.params;
-        const updateData = req.body;
+        const { organisationId } = req.body;
 
-        // --- Improved Validation ---
-        // 1. Prevent changing the unique teacherid
-        if (updateData.teacherid && updateData.teacherid !== teacherid) {
-            return res.status(400).json({ message: "Cannot change the teacher's ID." });
+        if (!organisationId) {
+            return res.status(400).json({ message: "organisationId required" });
         }
 
-        // 2. If a schedule_grid is being updated, validate its dimensions
-        if (updateData.schedule_grid) {
-            const grid = updateData.schedule_grid;
-            if (!Array.isArray(grid) || grid.length !== 5 || grid.some(row => !Array.isArray(row) || row.length !== 6)) {
-                return res.status(400).json({
-                    message: "Invalid schedule_grid format. It must be a 5x6 array."
-                });
-            }
-        }
+       
+        delete req.body.teacherId;
+        delete req.body.teacherid;
 
-        // Find the teacher by their custom `teacherid` and update them
-        const updatedTeacher = await Teacher.findOneAndUpdate(
-            { teacherid: teacherid },
-            { $set: updateData },
-            { new: true, runValidators: true } // Options: return the new version, run schema validators
+        const updated = await Teacher.findOneAndUpdate(
+            { teacherId: teacherid, organisationId },
+            { $set: req.body },
+            { new: true, runValidators: true }
         );
 
-        if (!updatedTeacher) {
-            return res.status(404).json({ message: `Teacher with ID '${teacherid}' not found.` });
+        if (!updated) {
+            return res.status(404).json({ message: "Teacher not found" });
         }
 
         res.status(200).json({
-            message: "Teacher updated successfully.",
-            teacher: updatedTeacher
+            message: "Teacher updated successfully",
+            teacher: updated
         });
 
     } catch (error) {
-        console.error('Error updating teacher:', error);
         if (error.code === 11000) {
-            return res.status(409).json({ message: "Update failed: A teacher with this Mail ID already exists." });
+            return res.status(409).json({ message: "Duplicate email detected" });
         }
-        // This will now handle schema validation errors more gracefully
-        if (error.name === 'ValidationError') {
-            return res.status(400).json({ message: `Validation Error: ${error.message}` });
-        }
-        res.status(500).json({ message: "Server error during teacher update." });
+        res.status(500).json({ message: "Update failed", error });
     }
 };
 
+/* ================= DELETE ================= */
 
-// DELETE /api/teachers/:teacherid - Delete a teacher
 exports.deleteTeacher = async (req, res) => {
     try {
         const { teacherid } = req.params;
+        const { organisationId } = req.query;
 
-        const deletedTeacher = await Teacher.findOneAndDelete({ teacherid: teacherid });
+        const deleted = await Teacher.findOneAndDelete({
+            teacherId: teacherid,
+            organisationId
+        });
 
-        if (!deletedTeacher) {
-            return res.status(404).json({ message: `Teacher with ID '${teacherid}' not found.` });
+        if (!deleted) {
+            return res.status(404).json({ message: "Teacher not found" });
         }
 
+        // 🔥 CLEAN UP SCHEDULE SLOTS
+        await ScheduleSlot.deleteMany({
+            teacherId: teacherid,
+            organisationId
+        });
 
         res.status(200).json({
-            message: `Teacher '${deletedTeacher.teachername}' (ID: ${teacherid}) was deleted successfully.`
+            message: `Teacher ${deleted.teacherName} deleted successfully`
         });
 
     } catch (error) {
-        console.error('Error deleting teacher:', error);
-        res.status(500).json({ message: "Server error during teacher deletion." });
+        res.status(500).json({ message: "Delete failed", error });
     }
 };

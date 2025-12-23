@@ -4,12 +4,24 @@ const router = express.Router();
 
 const teacherController = require('../controllers/teacherController');
 
+// POST /api/teachers
+// Create a new teacher
 router.post('/', teacherController.createTeacher);
+
+// GET /api/teachers?organisationId=ORG1
+// Get all teachers for an organisation
 router.get('/', teacherController.getAllTeachers);
-router.get('/:id', teacherController.getTeacherById); // This route uses the MongoDB _id
 
+// GET /api/teachers/:teacherId?organisationId=ORG1
+// Get a single teacher by teacherId (NOT Mongo _id)
+router.get('/:teacherId', teacherController.getTeacherById);
 
-router.put('/:teacherid', teacherController.updateTeacher);
+// PUT /api/teachers/:teacherId
+// Update teacher details (organisationId in body)
+router.put('/:teacherId', teacherController.updateTeacher);
 
-router.delete('/:teacherid', teacherController.deleteTeacher);
+// DELETE /api/teachers/:teacherId?organisationId=ORG1
+// Delete teacher and cleanup schedule slots
+router.delete('/:teacherId', teacherController.deleteTeacher);
+
 module.exports = router;
