@@ -36,7 +36,7 @@ const Connect = () => {
 
   return (
     <section className="py-20 m-4 rounded-3xl bg-gradient-to-t from-blue-100 to-white">
-      <div className="max-w-4xl p-8 mx-auto bg-white shadow-2xl rounded-3xl">
+      <div className="max-w-4xl p-8 mx-auto shadow-2xl bg-white/30 rounded-3xl">
         {/* Header */}
         <div className="mb-10 text-center">
           <h2 className="text-3xl font-semibold md:text-4xl">
