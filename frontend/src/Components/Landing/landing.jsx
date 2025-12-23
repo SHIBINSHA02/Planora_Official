@@ -133,7 +133,7 @@ function LandingPage() {
             className="py-16 mx-3 rounded-3xl"
           >
             <div className="px-4 mx-auto max-w-7xl"> 
-              <div className="flex lg:flex-row flex-col justify-center items-center">
+              <div className="flex lg:flex-row flex-col justify-center items-center gap-10">
               <div className="grid gap-6 grid-cols-1 ">
                 {features.map((feature, idx) => (
                   <div
@@ -165,13 +165,14 @@ function LandingPage() {
                   </div>
                 ))}
               </div>
-              <img
-              src="./office.png"
-              fill
-              alt="office png"
+              <div className="flex justify-center items-center lg:w-1/2 w-full bg-[#4F46E5] p-10 m-4 rounded-3xl">
+                <img
+                  src="/office.png"
+                  alt="Office illustration"
+                  className="w-full max-w-md lg:max-w-lg object-contain rounded-3xl"
+                />
+              </div>
 
-              className="object-contain lg:w-1/2 w-full"
-              />
               </div>
             </div>
           </section>
