@@ -12,6 +12,7 @@ import { useUser } from "@clerk/clerk-react";
 import Navigation from "../Navigation/Navigation";
 import Footer from "../Footer/Footer";
 import Connect from "./Connect";
+
 function LandingPage() {
   const { isSignedIn, isLoaded } = useUser();
 
@@ -131,8 +132,19 @@ function LandingPage() {
             id="features"
             className="py-16 mx-3 rounded-3xl"
           >
-            <div className="px-4 mx-auto max-w-7xl">
-              <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2">
+            <div className="px-4 mx-auto max-w-7xl"> 
+              <div className="flex lg:flex-row flex-col justify-center items-center gap-10">
+                <div className="flex justify-center items-center lg:w-1/2 w-full bg-[#4F46E5] p-10 m-4 rounded-3xl">
+               
+
+
+                <img
+                  src="/office.png"
+                  alt="Office illustration"
+                  className="w-full max-w-md lg:max-w-lg object-contain rounded-3xl"
+                />
+              </div>
+              <div className="grid gap-6 grid-cols-1 ">
                 {features.map((feature, idx) => (
                   <div
                     key={idx}
@@ -162,6 +174,9 @@ function LandingPage() {
                     </div>
                   </div>
                 ))}
+              </div>
+              
+
               </div>
             </div>
           </section>
