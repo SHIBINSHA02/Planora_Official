@@ -1,3 +1,4 @@
+// backend/routes/scheduleRoutes.js
 // backend/controllers/scheduleRoutes.js
 const express = require('express');
 const router = express.Router();
@@ -28,12 +29,20 @@ router.get('/classroom/:classroomId', async (req, res) => {
     const { organisationId } = req.query;
     const { classroomId } = req.params;
 
-    const slots = await ScheduleSlot.find({
-        organisationId,
-        classroomId
-    }).sort({ day: 1, period: 1 });
+    console.log("Searching for Org:", organisationId); // Should be ORG1
+    console.log("Searching for Room:", classroomId);   // Should be CSE-A1
 
-    res.json({ classroomId, schedule: slots });
+    try {
+        const slots = await ScheduleSlot.find({
+            organisationId: organisationId,
+            classroomId: classroomId
+        }).sort({ day: 1, period: 1 });
+
+        console.log("Found slots count:", slots.length);
+        res.json({ classroomId, schedule: slots });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // Teacher timetable
