@@ -1,11 +1,12 @@
 // frontend/src/Components/tables/ClassroomScheduleTable.jsx
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
-import { TeacherScheduleGrid } from "./teachergrid"; // Ensure this component exists
+import React, { useState, useRef, useEffect, useMemo } from "react";
+import { TeacherScheduleGrid } from "./teachergrid"; 
+import { useScheduleUI } from "../../context/ScheduleUIContext"; // Import the hook
 
 const ClassroomScheduleTable = ({
-  scheduleData,
+  scheduleData: rawScheduleData = [],
   days,
   periods,
   teachers = [],
@@ -13,113 +14,83 @@ const ClassroomScheduleTable = ({
   classroomSubjects = [],
   onUpdateSchedule,
 }) => {
-  
-  const [hoveredTeacher, setHoveredTeacher] = useState(null);
-  const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 });
+  // Consume the new UI context
+  const { hoveredTeacher, hoverPosition, showTeacherPreview, hideTeacherPreview } = useScheduleUI();
 
-  // ====================================================================================
-  // 🔹 CUSTOM TEACHER DROPDOWN
-  // ====================================================================================
-  const CustomTeacherDropdown = ({ value, onChange, teachers, rowIndex, colIndex }) => {
+  // 🔹 DATA TRANSFORMER: Flat array to 2D Grid
+  const scheduleGrid = useMemo(() => {
+    const grid = days.map(() => periods.map(() => []));
+    if (Array.isArray(rawScheduleData)) {
+      rawScheduleData.forEach((slot) => {
+        const d = Number(slot.day);
+        const p = Number(slot.period);
+        if (grid[d]?.[p]) {
+          grid[d][p].push({
+            _id: slot._id,
+            teacher_id: slot.teacherId,
+            subject: slot.subject,
+          });
+        }
+      });
+    }
+    return grid;
+  }, [rawScheduleData, days, periods]);
+
+  // 🔹 SUB-COMPONENT: Custom Teacher Dropdown
+  const CustomTeacherDropdown = ({ value, onChange, rowIndex, colIndex, filteredTeachers }) => {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
     const hoverTimeoutRef = useRef(null);
-    const hideTimeoutRef = useRef(null);
 
     useEffect(() => {
       const handleClickOutside = (event) => {
         if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
           setIsOpen(false);
-          setHoveredTeacher(null);
+          hideTeacherPreview(); // Use context instead of local state
         }
       };
       document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-        if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
-        if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
-      };
+      return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
     const selectedTeacher = teachers.find((t) => t._id === value);
 
     const handleTeacherHover = (teacher, event) => {
       if (!isOpen) return;
-      if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
-      if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
+      clearTimeout(hoverTimeoutRef.current);
 
       hoverTimeoutRef.current = setTimeout(() => {
-        if (isOpen) {
-          const rect = event.target.getBoundingClientRect();
-          setHoveredTeacher({
-            ...teacher,
-            currentDayIndex: rowIndex,
-            currentPeriodIndex: colIndex,
-          });
-          setHoverPosition({ x: rect.right + 10, y: rect.top });
-        }
+        const rect = event.target.getBoundingClientRect();
+        // Use context to show preview
+        showTeacherPreview(
+          { ...teacher, currentDayIndex: rowIndex, currentPeriodIndex: colIndex },
+          { x: rect.right + 10, y: rect.top }
+        );
       }, 700);
-    };
-
-    const handleTeacherLeave = () => {
-      if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
-      hideTimeoutRef.current = setTimeout(() => {
-        setHoveredTeacher(null);
-      }, 200);
-    };
-
-    const handleSelect = (teacherId) => {
-      setHoveredTeacher(null);
-      setIsOpen(false);
-      onChange(teacherId);
-    };
-
-    const handleDropdownToggle = (e) => {
-      e.stopPropagation();
-      setIsOpen(!isOpen);
-      if (isOpen) {
-        setHoveredTeacher(null);
-      }
     };
 
     return (
       <div className="relative" ref={dropdownRef}>
         <button
-          onClick={handleDropdownToggle}
+          onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
           className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-left flex justify-between items-center"
         >
-          <span className="truncate">
-            {selectedTeacher ? selectedTeacher.teachername : "Select Teacher"}
-          </span>
-          <span
-            className={`transform transition-transform text-gray-500 ${
-              isOpen ? "rotate-180" : ""
-            }`}
-          >
-            ▼
-          </span>
+          <span className="truncate">{selectedTeacher ? selectedTeacher.teachername : "Select Teacher"}</span>
+          <span className={`transform transition-transform text-gray-500 ${isOpen ? "rotate-180" : ""}`}>▼</span>
         </button>
-
         {isOpen && (
-          <div className="absolute z-40 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
-            <div
-              className="px-2 py-1.5 text-xs text-gray-500 hover:bg-gray-100 cursor-pointer"
-              onClick={() => handleSelect("")}
-            >
-              -- None --
-            </div>
-            {teachers.map((teacher) => (
+          <div className="absolute z-40 w-full mt-1 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-lg max-h-48">
+            <div className="px-2 py-1.5 text-xs text-gray-500 hover:bg-gray-100 cursor-pointer" onClick={() => { onChange(""); setIsOpen(false); }}>-- None --</div>
+            {filteredTeachers.map((teacher) => (
               <div
                 key={teacher._id}
                 className="px-2 py-1.5 text-xs hover:bg-indigo-50 cursor-pointer border-t border-gray-100"
-                onClick={() => handleSelect(teacher._id)}
+                onClick={() => { onChange(teacher._id); setIsOpen(false); hideTeacherPreview(); }}
                 onMouseEnter={(e) => handleTeacherHover(teacher, e)}
-                onMouseLeave={handleTeacherLeave}
+                onMouseLeave={() => { clearTimeout(hoverTimeoutRef.current); hideTeacherPreview(); }}
               >
                 <div className="font-medium text-gray-800">{teacher.teachername}</div>
-                <div className="text-gray-500 text-xs">
-                  {teacher.subjects?.join(", ") || "No subjects specified"}
-                </div>
+                <div className="text-xs text-gray-500">{teacher.subjects?.join(", ")}</div>
               </div>
             ))}
           </div>
@@ -128,196 +99,87 @@ const ClassroomScheduleTable = ({
     );
   };
 
-  // ====================================================================================
-  // 🔹 MULTI-SLOT HANDLERS
-  // ====================================================================================
-  const handleAddAssignment = (rowIndex, colIndex) => {
-    const updatedCell = [...(scheduleData[rowIndex][colIndex] || [])];
-    updatedCell.push({ teacher_id: "", teacher_name: "", subject: "" });
-    onUpdateSchedule(rowIndex, colIndex, updatedCell);
-  };
-
-  const handleRemoveAssignment = (rowIndex, colIndex, index) => {
-    const updatedCell = [...(scheduleData[rowIndex][colIndex] || [])];
-    updatedCell.splice(index, 1);
-    onUpdateSchedule(rowIndex, colIndex, updatedCell);
-  };
-
-  const handleTeacherChange = (rowIndex, colIndex, index, newTeacherId) => {
-    const updatedCell = [...(scheduleData[rowIndex][colIndex] || [])];
-    const newTeacher = teachers.find((t) => t._id === newTeacherId);
-
-    // ✅ FIX: Also reset the subject if the new teacher cannot teach the selected one
-    const currentSubject = updatedCell[index].subject;
-    const isSubjectValid = newTeacher?.subjects?.includes(currentSubject);
-
-    updatedCell[index] = {
-      ...updatedCell[index],
-      teacher_id: newTeacherId,
-      teacher_name: newTeacher ? newTeacher.teachername : "",
-      subject: isSubjectValid ? currentSubject : "", // Reset subject if invalid
-    };
-    onUpdateSchedule(rowIndex, colIndex, updatedCell);
-  };
-
-  const handleSubjectChange = (rowIndex, colIndex, index, newSubject) => {
-    const updatedCell = [...(scheduleData[rowIndex][colIndex] || [])];
-    updatedCell[index] = {
-      ...updatedCell[index],
-      subject: newSubject,
-    };
-    onUpdateSchedule(rowIndex, colIndex, updatedCell);
-  };
-
-  // ====================================================================================
-  // 🔹 CELL RENDERING
-  // ====================================================================================
-  const renderCell = (cell, rowIndex, colIndex) => {
-    const assignments = Array.isArray(cell) ? cell : [];
-
+  // 🔹 CELL RENDERER
+  const renderCell = (assignments, rowIndex, colIndex) => {
     return (
       <div className="space-y-2">
         {assignments.map((assignment, index) => {
           const currentTeacherId = assignment.teacher_id || "";
           const currentSubject = assignment.subject || "";
-
-          // ✅ START: Filtering Logic
-          // 1. Filter teachers based on the currently selected subject.
-          const availableTeachers = currentSubject
-            ? teachers.filter(
-                (teacher) =>
-                  teacher.subjects && teacher.subjects.includes(currentSubject)
-              )
-            : teachers; // If no subject, all teachers are available.
-
-          const sortedTeachers = [...availableTeachers].sort((a, b) =>
-            (a.teachername || "").localeCompare(b.teachername || "")
-          );
-
-          // 2. Filter subjects based on the currently selected teacher.
-          const selectedTeacher = teachers.find((t) => t._id === currentTeacherId);
-          const baseSubjects =
-            classroomSubjects.length > 0 ? classroomSubjects : subjects;
-
-          const availableSubjects = selectedTeacher?.subjects
-            ? baseSubjects.filter((subject) =>
-                selectedTeacher.subjects.includes(subject)
-              )
-            : baseSubjects; // If no teacher, all classroom subjects are available.
-
-          const sortedSubjects = [...availableSubjects].sort((a, b) =>
-            a.localeCompare(b)
-          );
-          // ✅ END: Filtering Logic
+          const availableTeachers = currentSubject ? teachers.filter(t => t.subjects?.includes(currentSubject)) : teachers;
+          const baseSubjects = classroomSubjects.length > 0 ? classroomSubjects : subjects;
+          const selectedTeacher = teachers.find(t => t._id === currentTeacherId);
+          const availableSubjects = selectedTeacher?.subjects ? baseSubjects.filter(s => selectedTeacher.subjects.includes(s)) : baseSubjects;
 
           return (
-            <div key={index} className="border rounded-md p-2 mb-2 bg-gray-50">
+            <div key={index} className="p-2 mb-2 text-left border rounded-md bg-gray-50">
               <CustomTeacherDropdown
                 value={currentTeacherId}
-                onChange={(newTeacherId) =>
-                  handleTeacherChange(rowIndex, colIndex, index, newTeacherId)
-                }
-                teachers={sortedTeachers} // Use filtered list
                 rowIndex={rowIndex}
                 colIndex={colIndex}
+                filteredTeachers={availableTeachers}
+                onChange={(newId) => {
+                  const updatedCell = [...scheduleGrid[rowIndex][colIndex]];
+                  const item = { ...updatedCell[index], teacherId: newId, subject: updatedCell[index].subject };
+                  onUpdateSchedule(rowIndex, colIndex, item);
+                }}
               />
-
               <select
                 value={currentSubject}
-                onChange={(e) =>
-                  handleSubjectChange(rowIndex, colIndex, index, e.target.value)
-                }
-                className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                onChange={(e) => {
+                  const updatedCell = [...scheduleGrid[rowIndex][colIndex]];
+                  const item = { ...updatedCell[index], teacherId: updatedCell[index].teacher_id, subject: e.target.value };
+                  onUpdateSchedule(rowIndex, colIndex, item);
+                }}
+                className="w-full mt-1 px-2 py-1.5 text-xs border border-gray-300 rounded bg-white"
               >
                 <option value="">Select Subject</option>
-                {sortedSubjects.map((subject, idx) => ( // Use filtered list
-                  <option key={`${subject}-${idx}`} value={subject}>
-                    {subject}
-                  </option>
-                ))}
+                {availableSubjects.map((s, idx) => (<option key={idx} value={s}>{s}</option>))}
               </select>
-
-              <button
-                onClick={() =>
-                  handleRemoveAssignment(rowIndex, colIndex, index)
-                }
-                className="mt-1 w-full px-2 py-1 text-xs bg-red-100 text-red-700 border border-red-200 rounded hover:bg-red-200"
-              >
-                Remove
-              </button>
             </div>
           );
         })}
-
         <button
-          onClick={() => handleAddAssignment(rowIndex, colIndex)}
-          className="w-full px-2 py-1 text-xs bg-green-100 text-green-700 border border-green-200 rounded hover:bg-green-200"
+          onClick={() => onUpdateSchedule(rowIndex, colIndex, { teacherId: "", subject: "" })}
+          className="w-full px-2 py-1 text-xs text-green-700 transition-colors border border-green-200 rounded bg-green-50 hover:bg-green-100"
         >
-          + Add Assignment
+          + Assign
         </button>
-
-        <div className="text-xs text-gray-500 pt-1 text-center">
-          {assignments.length} assignment{assignments.length !== 1 ? "s" : ""}
-        </div>
       </div>
     );
   };
 
-  // ====================================================================================
-  // 🔹 MAIN RENDER
-  // ====================================================================================
   return (
-    <div className="overflow-x-auto shadow-lg rounded-lg relative">
-      
-
-      <table className="min-w-full border-collapse border border-gray-300">
+    <div className="overflow-x-auto border border-gray-200 rounded-lg shadow-lg">
+      <table className="min-w-full bg-white border-collapse">
         <thead>
-          <tr className="bg-gray-100">
-            <th className="border px-4 py-2 text-left font-semibold">
-              Day/Period
-            </th>
-            {periods.map((period, index) => (
-              <th
-                key={index}
-                className="border px-4 py-2 text-center font-semibold"
-              >
-                {period}
-              </th>
-            ))}
+          <tr className="bg-gray-100 border-b border-gray-300">
+            <th className="w-32 px-4 py-3 text-sm font-bold text-left text-gray-700 border-r">Day / Period</th>
+            {periods.map((p, i) => (<th key={i} className="px-4 py-3 text-sm font-bold text-center text-gray-700 border-r">{p}</th>))}
           </tr>
         </thead>
         <tbody>
-          {scheduleData &&
-            scheduleData.map((row, rowIndex) => (
-              <tr
-                key={rowIndex}
-                className={rowIndex % 2 === 0 ? "bg-white" : "bg-gray-50"}
-              >
-                <td className="border px-4 py-2 font-semibold bg-gray-100 align-middle">
-                  {days[rowIndex]}
+          {scheduleGrid.map((row, rowIndex) => (
+            <tr key={rowIndex} className="transition-colors border-b border-gray-200 hover:bg-gray-50">
+              <td className="px-4 py-4 text-sm font-bold text-gray-800 border-r bg-gray-50">{days[rowIndex]}</td>
+              {row.map((cell, colIndex) => (
+                <td key={colIndex} className="border-r p-2 align-top min-w-[140px]">
+                  {renderCell(cell, rowIndex, colIndex)}
                 </td>
-                {row.map((cell, colIndex) => (
-                  <td
-                    key={`${rowIndex}-${colIndex}`}
-                    className="border p-2 text-center align-top"
-                  >
-                    {renderCell(cell, rowIndex, colIndex)}
-                  </td>
-                ))}
-              </tr>
-            ))}
+              ))}
+            </tr>
+          ))}
         </tbody>
       </table>
 
+      {/* RENDER THE GRID PREVIEW IF HOVERED */}
       {hoveredTeacher && (
         <TeacherScheduleGrid
           teacher={hoveredTeacher}
           position={hoverPosition}
-          currentDayIndex={hoveredTeacher.currentDayIndex}
-          currentPeriodIndex={hoveredTeacher.currentPeriodIndex}
-          setHoveredTeacher={setHoveredTeacher}
           days={days}
           periods={periods}
+          
         />
       )}
     </div>

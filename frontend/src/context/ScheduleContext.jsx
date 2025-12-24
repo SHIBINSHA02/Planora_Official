@@ -1,81 +1,56 @@
 // frontend/src/context/ScheduleContext.jsx
-import React, { createContext, useState } from "react";
+import { createContext, useState, useCallback } from "react";
 import axios from "axios";
-import { useOrganisationContext } from "./useOrganisationContext";
 
 export const ScheduleContext = createContext(null);
 
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3000";
+
 export const ScheduleProvider = ({ children }) => {
-  const { activeOrganisation } = useOrganisationContext();
-
-  const organisationId = activeOrganisation?.organisationId;
-
   const [schedules, setSchedules] = useState({});
+  const [teacherSchedules, setTeacherSchedules] = useState({});
 
-  /**
-   * Fetch schedule for a classroom
-   */
-  const fetchClassroomSchedule = async (classroomId) => {
-    if (!organisationId || !classroomId) return;
+  /* ================= CLASSROOM ================= */
 
-    // cache check
-    if (schedules[classroomId]) return;
-
+  const fetchClassroomSchedule = useCallback(async (classroomId) => {
     const res = await axios.get(
-      `/api/schedules/classroom/${classroomId}`,
-      {
-        params: { organisationId },
-        withCredentials: true,
-      }
+      `${API_BASE}/api/schedule/classroom/${classroomId}`
     );
 
-    setSchedules((prev) => ({
+    setSchedules(prev => ({
       ...prev,
-      [classroomId]: res.data.schedule,
+      [classroomId]: res.data.schedule
     }));
-  };
+  }, []);
 
-  /**
-   * Update a single slot
-   */
-  const updateSlot = async ({
-    classroomId,
-    teacherId,
-    subject,
-    day,
-    period,
-  }) => {
-    if (!organisationId) return;
+  /* ================= TEACHER ================= */
 
-    await axios.post(
-      "/api/schedules",
-      {
-        organisationId,
-        classroomId,
-        teacherId,
-        subject,
-        day,
-        period,
-      },
-      { withCredentials: true }
+  const fetchTeacherSchedule = useCallback(async (teacherId, organisationId) => {
+    const res = await axios.get(
+      `${API_BASE}/api/schedule/teacher/${teacherId}`,
+      { params: { organisationId } }
     );
 
-    // re-fetch (source of truth)
-    setSchedules((prev) => {
-      const copy = { ...prev };
-      delete copy[classroomId];
-      return copy;
-    });
+    setTeacherSchedules(prev => ({
+      ...prev,
+      [teacherId]: res.data.schedule
+    }));
+  }, []);
 
-    await fetchClassroomSchedule(classroomId);
+  /* ================= UPDATE SLOT ================= */
+
+  const updateSlot = async (payload) => {
+    await axios.post(`${API_BASE}/api/schedule`, payload);
   };
 
   return (
     <ScheduleContext.Provider
       value={{
         schedules,
+        teacherSchedules,
         fetchClassroomSchedule,
-        updateSlot,
+        fetchTeacherSchedule,
+        updateSlot
       }}
     >
       {children}

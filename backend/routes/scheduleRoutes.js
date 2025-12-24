@@ -3,7 +3,7 @@
 const express = require('express');
 const router = express.Router();
 const ScheduleSlot = require('../models/ScheduleSlot');
-
+const scheduleController = require('../controllers/scheduleController')
 /* ================= CREATE ================= */
 router.post('/', async (req, res) => {
     try {
@@ -46,17 +46,7 @@ router.get('/classroom/:classroomId', async (req, res) => {
 });
 
 // Teacher timetable
-router.get('/teacher/:teacherId', async (req, res) => {
-    const { organisationId } = req.query;
-    const { teacherId } = req.params;
-
-    const slots = await ScheduleSlot.find({
-        organisationId,
-        teacherId
-    }).sort({ day: 1, period: 1 });
-
-    res.json({ teacherId, schedule: slots });
-});
+router.get("/teacher/:teacherId", scheduleController.getTeacherSchedule);
 
 /* ================= UPDATE ================= */
 router.put('/:slotId', async (req, res) => {
