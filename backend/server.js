@@ -25,10 +25,6 @@ mongoose.connect(process.env.MongoDB)
 const frontendURL ='http://localhost:5173';
 
 app.use(cors({
-  origin: 'http://localhost:5173', // EXACT URL of your frontend
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true // ESSENTIAL because your frontend uses withCredentials: true
 }));// No config object - allows all origins ('*')
 const organisationRoutes = require("./routes/organisationRoutes");
 const ScheduleSlot = require('./models/ScheduleSlot');
@@ -44,6 +40,7 @@ app.use('/api/classrooms', classroomRoutes);
 app.use('/api/schedule', scheduleRoutes);
 app.use('/automate', automate)
 app.use("/api/organisations", organisationRoutes);
+app.options('*', cors());
 
 // Socket.IO setup
 const io = new Server(server, {

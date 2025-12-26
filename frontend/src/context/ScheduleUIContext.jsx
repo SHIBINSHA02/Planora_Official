@@ -1,3 +1,4 @@
+// frontend/src/context/ScheduleUIContext.jsx
 import React, { createContext, useContext, useState } from "react";
 
 const ScheduleUIContext = createContext(null);
