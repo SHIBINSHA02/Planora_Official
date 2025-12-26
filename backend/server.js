@@ -40,7 +40,6 @@ app.use('/api/classrooms', classroomRoutes);
 app.use('/api/schedule', scheduleRoutes);
 app.use('/automate', automate)
 app.use("/api/organisations", organisationRoutes);
-app.options('*', cors());
 
 // Socket.IO setup
 const io = new Server(server, {

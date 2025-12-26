@@ -23,12 +23,28 @@ exports.getTeacherSchedule = async (req, res) => {
       .sort({ day: 1, period: 1 })
       .lean();
 
+    // Fetch Teacher Name
+    const teacher = await Teacher.findOne({
+      teacherId,
+      organisationId
+    }).select("teacherName").lean();
+
+    const teacherName = teacher?.teacherName || "Unknown";
+
+    // Attach teacherName to each slot
+    const enriched = schedule.map(s => ({
+      ...s,
+      teacherName
+    }));
+
     res.status(200).json({
       teacherId,
+      teacherName,
       organisationId,
-      totalSlots: schedule.length,
-      schedule
+      totalSlots: enriched.length,
+      schedule: enriched
     });
+
   } catch (error) {
     res.status(500).json({
       message: "Failed to fetch teacher schedule",
