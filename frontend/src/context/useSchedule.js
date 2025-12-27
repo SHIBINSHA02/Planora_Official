@@ -3,13 +3,13 @@ import { useContext } from "react";
 import { ScheduleContext } from "./ScheduleContext";
 
 export const useSchedule = () => {
-  const ctx = useContext(ScheduleContext);
+  const context = useContext(ScheduleContext);
 
-  if (!ctx) {
+  if (!context) {
     throw new Error(
-      "useSchedule must be used inside ScheduleProvider"
+      "useSchedule must be used inside a ScheduleProvider"
     );
   }
 
-  return ctx;
+  return context;
 };

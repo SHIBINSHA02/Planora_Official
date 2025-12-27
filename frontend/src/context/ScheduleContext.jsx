@@ -1,80 +1,98 @@
 // frontend/src/context/ScheduleContext.jsx
-import React, { createContext, useState } from "react";
+import { createContext, useState, useCallback, useEffect } from "react";
 import axios from "axios";
 import { useOrganisationContext } from "./useOrganisationContext";
 
 export const ScheduleContext = createContext(null);
 
-export const ScheduleProvider = ({ children }) => {
-  const { activeOrganisation } = useOrganisationContext();
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3000";
 
+export const ScheduleProvider = ({ children }) => {
+  const [schedules, setSchedules] = useState({});
+  const [teacherSchedules, setTeacherSchedules] = useState({});
+
+  const { activeOrganisation } = useOrganisationContext();
   const organisationId = activeOrganisation?.organisationId;
 
-  const [schedules, setSchedules] = useState({});
 
-  /**
-   * Fetch schedule for a classroom
-   */
-  const fetchClassroomSchedule = async (classroomId) => {
-    if (!organisationId || !classroomId) return;
+  /* ================= CLASSROOM ================= */
+  const fetchClassroomSchedule = useCallback(
+    async (classroomId) => {
+      if (!organisationId) return;
 
-    // cache check
-    if (schedules[classroomId]) return;
+      const res = await axios.get(
+        `${API_BASE}/api/schedule/classroom/${classroomId}`,
+        { params: { organisationId } }
+      );
 
-    const res = await axios.get(
-      `/api/schedules/classroom/${classroomId}`,
-      {
-        params: { organisationId },
-        withCredentials: true,
+      // schedule already includes teacherName now 🎉
+      setSchedules(prev => ({
+        ...prev,
+        [classroomId]: res.data.schedule
+      }));
+    },
+    [organisationId]
+  );
+
+
+  /* ================= TEACHER ================= */
+  const fetchTeacherSchedule = useCallback(
+    async (teacherId) => {
+      if (!organisationId) return;
+
+      const res = await axios.get(
+        `${API_BASE}/api/schedule/teacher/${teacherId}`,
+        { params: { organisationId } }
+      );
+
+      setTeacherSchedules(prev => ({
+        ...prev,
+        [teacherId]: res.data.schedule
+      }));
+    },
+    [organisationId]
+  );
+
+
+  /* ================= CREATE / UPDATE SLOT ================= */
+  const updateSlot = useCallback(
+    async (payload) => {
+      if (!organisationId) throw new Error("Organisation missing");
+
+      // Don't allow empty saves — prevents 400 error
+      if (!payload.teacherId || !payload.subject) {
+        console.warn("Ignoring empty slot save");
+        return;
       }
-    );
 
-    setSchedules((prev) => ({
-      ...prev,
-      [classroomId]: res.data.schedule,
-    }));
-  };
+      await axios.post(`${API_BASE}/api/schedule`, {
+        ...payload,
+        organisationId
+      });
 
-  /**
-   * Update a single slot
-   */
-  const updateSlot = async ({
-    classroomId,
-    teacherId,
-    subject,
-    day,
-    period,
-  }) => {
-    if (!organisationId) return;
+      // Refresh classroom after saving
+      if (payload.classroomId) {
+        await fetchClassroomSchedule(payload.classroomId);
+      }
+    },
+    [organisationId, fetchClassroomSchedule]   // <-- important
+  );
 
-    await axios.post(
-      "/api/schedules",
-      {
-        organisationId,
-        classroomId,
-        teacherId,
-        subject,
-        day,
-        period,
-      },
-      { withCredentials: true }
-    );
 
-    // re-fetch (source of truth)
-    setSchedules((prev) => {
-      const copy = { ...prev };
-      delete copy[classroomId];
-      return copy;
-    });
+  /* ================= RESET WHEN ORG CHANGES ================= */
+  useEffect(() => {
+    setSchedules({});
+    setTeacherSchedules({});
+  }, [organisationId]);
 
-    await fetchClassroomSchedule(classroomId);
-  };
 
   return (
     <ScheduleContext.Provider
       value={{
         schedules,
+        teacherSchedules,
         fetchClassroomSchedule,
+        fetchTeacherSchedule,
         updateSlot,
       }}
     >

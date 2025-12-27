@@ -1,8 +1,11 @@
 // frontend/src/Components/Dashboard/teacher_onboarding.jsx
 import React, { useState } from 'react';
 import Papa from 'papaparse';
+import { useOrganisationContext } from "../../context/useOrganisationContext";
 
 const TeacherOnboarding = () => {
+  const { activeOrganisation, loading } = useOrganisationContext();
+
   const [teacherName, setTeacherName] = useState('');
   const [teacherEmail, setTeacherEmail] = useState('');
   const [subjectInput, setSubjectInput] = useState('');
@@ -10,54 +13,65 @@ const TeacherOnboarding = () => {
   const [csvFile, setCsvFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
 
+  if (loading) {
+    return <p className="text-gray-700">Loading organisation...</p>;
+  }
+
+  if (!activeOrganisation) {
+    return <p className="font-semibold text-red-600">
+      No organisation selected. Please select an organisation.
+    </p>;
+  }
+
+  /* ================= SUBJECT ADD ================= */
   const handleAddSubject = () => {
     const trimmed = subjectInput.trim();
     if (!trimmed) return;
-    // prevent duplicates (case-insensitive)
+
     const exists = subjects.some(s => s.toLowerCase() === trimmed.toLowerCase());
     if (exists) {
       setSubjectInput('');
       return;
     }
+
     setSubjects(prev => [...prev, trimmed]);
     setSubjectInput('');
   };
 
+  /* ================= MANUAL SUBMIT ================= */
   const handleManualSubmit = async (e) => {
     e.preventDefault();
 
     const trimmedName = teacherName.trim();
     const trimmedEmail = teacherEmail.trim();
+
     if (!trimmedName || !trimmedEmail || subjects.length === 0) {
       alert('Please fill name, email, and at least one subject.');
       return;
     }
 
     const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000';
+
     const payload = {
+      organisationId: activeOrganisation.organisationId,
       teachername: trimmedName,
       mailid: trimmedEmail,
-      subjects: subjects,
+      subjects
     };
 
     try {
       const res = await fetch(`${API_BASE}/api/teachers`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || 'Failed to add teacher');
-      }
+      if (!res.ok) throw new Error(await res.text());
 
-      // reset form on success
       setTeacherName('');
       setTeacherEmail('');
       setSubjects([]);
+
       alert('Teacher added successfully');
     } catch (err) {
       console.error('Add teacher failed:', err);
@@ -65,10 +79,9 @@ const TeacherOnboarding = () => {
     }
   };
 
+  /* ================= CSV ================= */
   const handleFileChange = (e) => {
-    if (e.target.files.length) {
-      setCsvFile(e.target.files[0]);
-    }
+    if (e.target.files.length) setCsvFile(e.target.files[0]);
   };
 
   const handleCsvSubmit = () => {
@@ -84,13 +97,16 @@ const TeacherOnboarding = () => {
       skipEmptyLines: true,
       complete: async (results) => {
         const teachers = results.data.map(row => ({
+          organisationId: activeOrganisation.organisationId,
           teachername: row.teachername,
           mailid: row.mailid,
-          // Assuming subjects are in a comma-separated string in the CSV
-          subjects: row.subjects ? row.subjects.split(',').map(s => s.trim()) : []
+          subjects: row.subjects
+            ? row.subjects.split(',').map(s => s.trim())
+            : []
         }));
 
         const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000';
+
         let successCount = 0;
         let errorCount = 0;
 
@@ -104,17 +120,11 @@ const TeacherOnboarding = () => {
           try {
             const res = await fetch(`${API_BASE}/api/teachers`, {
               method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(teacher),
             });
 
-            if (res.ok) {
-              successCount++;
-            } else {
-              errorCount++;
-            }
+            res.ok ? successCount++ : errorCount++;
           } catch (err) {
             console.error('Failed to add teacher from CSV:', err);
             errorCount++;
@@ -123,11 +133,13 @@ const TeacherOnboarding = () => {
 
         setIsUploading(false);
         setCsvFile(null);
-        // Clear the file input
         document.getElementById('csv-input').value = '';
 
-        alert(`CSV processing complete.\nSuccessfully added: ${successCount}\nFailed: ${errorCount}`);
+        alert(`CSV processing complete.
+Successfully added: ${successCount}
+Failed: ${errorCount}`);
       },
+
       error: (error) => {
         setIsUploading(false);
         console.error('Error parsing CSV:', error);
@@ -138,40 +150,46 @@ const TeacherOnboarding = () => {
 
   return (
     <div className="space-y-8 divide-y divide-gray-200">
-      {/* Manual Onboarding Form */}
+      <h1 className="text-2xl font-bold text-gray-900">
+        Active Organisation: {activeOrganisation.organisationName}
+      </h1>
+
+      {/* ================= MANUAL FORM ================= */}
       <form onSubmit={handleManualSubmit} className="space-y-6 text-gray-700">
-        <h2 className="text-xl font-semibold text-gray-900">Add a Single Teacher</h2>
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Teacher Name</label>
+        <h2 className="text-xl font-semibold">Add a Single Teacher</h2>
+
+        <div>
+          <label className="block text-sm font-medium">Teacher Name</label>
           <input
             type="text"
             value={teacherName}
             onChange={(e) => setTeacherName(e.target.value)}
             placeholder="Enter teacher name"
-            className="w-full rounded-md bg-white border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600"
+            className="w-full px-3 py-2 border rounded-md"
           />
         </div>
 
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Teacher Email</label>
+        <div>
+          <label className="block text-sm font-medium">Teacher Email</label>
           <input
             type="email"
             value={teacherEmail}
             onChange={(e) => setTeacherEmail(e.target.value)}
             placeholder="Enter teacher email"
-            className="w-full rounded-md bg-white border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600"
+            className="w-full px-3 py-2 border rounded-md"
           />
         </div>
 
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Subjects</label>
+        <div>
+          <label className="block text-sm font-medium">Subjects</label>
+
           <div className="flex gap-3">
             <input
               type="text"
               value={subjectInput}
               onChange={(e) => setSubjectInput(e.target.value)}
               placeholder="Add a subject"
-              className="flex-1 rounded-md bg-white border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600"
+              className="flex-1 px-3 py-2 border rounded-md"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   e.preventDefault();
@@ -179,10 +197,11 @@ const TeacherOnboarding = () => {
                 }
               }}
             />
+
             <button
               type="button"
               onClick={handleAddSubject}
-              className="shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 rounded-md transition-colors duration-200 shadow"
+              className="px-4 text-white bg-indigo-600 rounded-md"
             >
               Add
             </button>
@@ -191,10 +210,7 @@ const TeacherOnboarding = () => {
           {subjects.length > 0 && (
             <div className="flex flex-wrap gap-2 pt-2">
               {subjects.map((s, idx) => (
-                <span
-                  key={`${s}-${idx}`}
-                  className="inline-flex items-center gap-2 rounded-md bg-gray-100 text-gray-800 text-sm px-3 py-1"
-                >
+                <span key={idx} className="px-3 py-1 text-sm bg-gray-200 rounded-md">
                   {s}
                 </span>
               ))}
@@ -202,48 +218,34 @@ const TeacherOnboarding = () => {
           )}
         </div>
 
-        <div className="pt-2">
-          <button
-            type="submit"
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg transition-colors duration-200 shadow"
-          >
-            Submit
-          </button>
-        </div>
+        <button
+          type="submit"
+          className="w-full py-3 text-white bg-indigo-600 rounded-lg"
+        >
+          Submit
+        </button>
       </form>
 
-      {/* CSV Upload Onboarding */}
-      <div className="space-y-6 pt-8">
-         <h2 className="text-xl font-semibold text-gray-900">Bulk Onboard with CSV</h2>
-         <p className="text-sm text-gray-500">
-           Upload a CSV file with the columns: <code>teachername</code>, <code>mailid</code>, and <code>subjects</code> (comma-separated).
-         </p>
-        <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Upload CSV File</label>
-            <input
-                id="csv-input"
-                type="file"
-                accept=".csv"
-                onChange={handleFileChange}
-                className="block w-full text-sm text-gray-500
-                file:mr-4 file:py-2 file:px-4
-                file:rounded-md file:border-0
-                file:text-sm file:font-semibold
-                file:bg-indigo-50 file:text-indigo-700
-                hover:file:bg-indigo-100"
-            />
-        </div>
+      {/* ================= CSV ================= */}
+      <div className="pt-8 space-y-4">
+        <h2 className="text-xl font-semibold">Bulk Onboard with CSV</h2>
 
-        <div className="pt-2">
-            <button
-                type="button"
-                onClick={handleCsvSubmit}
-                disabled={isUploading}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg transition-colors duration-200 shadow disabled:bg-gray-400"
-            >
-                {isUploading ? 'Uploading...' : 'Upload and Onboard Teachers'}
-            </button>
-        </div>
+        <input
+          id="csv-input"
+          type="file"
+          accept=".csv"
+          onChange={handleFileChange}
+          className="block w-full "
+        />
+
+        <button
+          type="button"
+          onClick={handleCsvSubmit}
+          disabled={isUploading}
+          className="w-full py-3 text-white bg-indigo-600 rounded-lg disabled:bg-gray-400"
+        >
+          {isUploading ? 'Uploading...' : 'Upload and Onboard Teachers'}
+        </button>
       </div>
     </div>
   );

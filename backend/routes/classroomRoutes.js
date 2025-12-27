@@ -10,7 +10,51 @@ router.post('/', classroomController.onboardClassroom);
 router.get('/', classroomController.getAllClassrooms);
 
 // GET /api/classrooms/:classroomId?organisationId=ORG1
-router.get('/:classroomId', classroomController.getClassroom);
+router.get('/classroom/:classroomId', async (req, res) => {
+  const { organisationId } = req.query;
+  const { classroomId } = req.params;
+
+  try {
+    const slots = await ScheduleSlot.find({
+      organisationId,
+      classroomId
+    })
+      .sort({ day: 1, period: 1 })
+      .lean();
+
+    // Collect unique teacherIds
+    const teacherIds = [...new Set(slots.map(s => s.teacherId))];
+
+    const teachers = await Teacher.find({
+      teacherId: { $in: teacherIds },
+      organisationId
+    })
+      .select("teacherId teacherName")
+      .lean();
+
+    // Build lookup
+    const teacherMap = Object.fromEntries(
+      teachers.map(t => [t.teacherId, t.teacherName])
+    );
+
+    // Attach teacherName to each slot
+    const enriched = slots.map(s => ({
+      ...s,
+      teacherName: teacherMap[s.teacherId] || "Unknown"
+    }));
+
+    res.json({
+      classroomId,
+      organisationId,
+      totalSlots: enriched.length,
+      schedule: enriched
+    });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
 // PUT /api/classrooms/:classroomId
 router.put('/:classroomId', classroomController.updateClassroom);

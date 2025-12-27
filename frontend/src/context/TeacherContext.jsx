@@ -1,3 +1,4 @@
+// frontend/src/context/TeacherContext.jsx
 import React, { createContext, useEffect, useState } from "react";
 import axios from "axios";
 import { useOrganisationContext } from "./useOrganisationContext";

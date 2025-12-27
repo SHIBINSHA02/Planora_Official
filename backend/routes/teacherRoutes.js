@@ -4,8 +4,10 @@ const router = express.Router();
 
 const teacherController = require('../controllers/teacherController');
 
-// POST /api/teachers
-// Create a new teacher
+
+
+
+
 router.post('/', teacherController.createTeacher);
 
 // GET /api/teachers?organisationId=ORG1

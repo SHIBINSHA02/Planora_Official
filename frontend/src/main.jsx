@@ -1,3 +1,4 @@
+// frontend/src/main.jsx
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
@@ -13,6 +14,7 @@ import { TeacherProvider } from "./context/TeacherContext";
 import { ClassroomProvider } from "./context/ClassroomContext";
 import { ScheduleProvider } from "./context/ScheduleContext";
 
+
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <ClerkProvider publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY}>
@@ -22,7 +24,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <ClassroomProvider>
               <TeacherProvider>
                 <ScheduleProvider>
-                  <App />
+                  
+                    <App />
+               
                 </ScheduleProvider>
               </TeacherProvider>
             </ClassroomProvider>

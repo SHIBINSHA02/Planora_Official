@@ -3,16 +3,41 @@
 const express = require('express');
 const router = express.Router();
 const ScheduleSlot = require('../models/ScheduleSlot');
+const scheduleController = require('../controllers/scheduleController')
 
 /* ================= CREATE ================= */
 router.post('/', async (req, res) => {
-    try {
-        const slot = await ScheduleSlot.create(req.body);
-        res.status(201).json({ success: true, slot });
-    } catch (err) {
-        res.status(400).json({ success: false, message: err.message });
-    }
+  try {
+    const { organisationId, classroomId, teacherId, subject, day, period } = req.body;
+
+    if (!organisationId || !classroomId)
+      return res.status(400).json({ message: "organisationId & classroomId required" });
+
+    if (!teacherId || !subject)
+      return res.status(400).json({ message: "teacherId & subject required" });
+
+    const slot = await ScheduleSlot.findOneAndUpdate(
+      { organisationId, classroomId, day, period },   // match existing
+      {
+        $set: {
+          teacherId,
+          subject
+        }
+      },
+      { new: true, upsert: true, runValidators: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      slot
+    });
+
+  } catch (err) {
+    console.error("❌ Schedule upsert error:", err);
+    res.status(400).json({ success: false, message: err.message });
+  }
 });
+
 
 /* ================= READ ================= */
 
@@ -24,39 +49,73 @@ router.get('/', async (req, res) => {
     res.json({ count: slots.length, data: slots });
 });
 
-// Classroom timetable
+const Teacher = require("../models/Teacher");
+
 router.get('/classroom/:classroomId', async (req, res) => {
-    const { organisationId } = req.query;
-    const { classroomId } = req.params;
+  const { organisationId } = req.query;
+  const { classroomId } = req.params;
 
-    console.log("Searching for Org:", organisationId); // Should be ORG1
-    console.log("Searching for Room:", classroomId);   // Should be CSE-A1
+  try {
+    const slots = await ScheduleSlot.find({
+      organisationId,
+      classroomId
+    })
+      .sort({ day: 1, period: 1 })
+      .lean();
 
-    try {
-        const slots = await ScheduleSlot.find({
-            organisationId: organisationId,
-            classroomId: classroomId
-        }).sort({ day: 1, period: 1 });
-
-        console.log("Found slots count:", slots.length);
-        res.json({ classroomId, schedule: slots });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+    if (!slots.length) {
+      return res.json({
+        classroomId,
+        organisationId,
+        totalSlots: 0,
+        schedule: []
+      });
     }
+
+    const teacherIds = [...new Set(
+      slots.map(s => s.teacherId).filter(Boolean)
+    )];
+
+    let teacherMap = {};
+
+    if (teacherIds.length > 0) {
+      const teachers = await Teacher.find({
+        teacherId: { $in: teacherIds },
+        organisationId
+      })
+        .select("teacherId teacherName")
+        .lean();
+
+      teacherMap = Object.fromEntries(
+        teachers.map(t => [t.teacherId, t.teacherName])
+      );
+    }
+
+    const enriched = slots.map(s => ({
+      ...s,
+      teacherName: teacherMap[s.teacherId] || "Unknown"
+    }));
+
+    res.json({
+      classroomId,
+      organisationId,
+      totalSlots: enriched.length,
+      schedule: enriched
+    });
+
+  } catch (err) {
+    console.error("❌ Classroom timetable error:", err);
+    res.status(500).json({
+      message: "Failed to load classroom schedule",
+      error: err.message
+    });
+  }
 });
+
+
 
 // Teacher timetable
-router.get('/teacher/:teacherId', async (req, res) => {
-    const { organisationId } = req.query;
-    const { teacherId } = req.params;
-
-    const slots = await ScheduleSlot.find({
-        organisationId,
-        teacherId
-    }).sort({ day: 1, period: 1 });
-
-    res.json({ teacherId, schedule: slots });
-});
+router.get("/teacher/:teacherId", scheduleController.getTeacherSchedule);
 
 /* ================= UPDATE ================= */
 router.put('/:slotId', async (req, res) => {
