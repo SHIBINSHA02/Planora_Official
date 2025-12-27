@@ -9,15 +9,19 @@ const EventEmitter = require('events');
 const teacherEmitter = new EventEmitter();
 exports.teacherEmitter = teacherEmitter;
 
-/* ================= ID GENERATOR ================= */
 
+
+
+
+/* ================= ID GENERATOR ================= */
 const generateTeacherId = async () => {
-    const counter = await Counter.findOneAndUpdate(
-        { _id: 'teacherid' },
-        { $inc: { sequence_value: 1 } },
-        { new: true, upsert: true }
-    );
-    return `T-${counter.sequence_value}`;
+  const counter = await Counter.findOneAndUpdate(
+    { _id: 'teacherid' },
+    { $inc: { sequence_value: 1 } },
+    { new: true, upsert: true }
+  );
+
+  return `T-${counter.sequence_value}`;
 };
 
 /* ================= CREATE ================= */
@@ -27,57 +31,63 @@ exports.createTeacher = async (req, res) => {
 
     if (!organisationId || !teachername || !mailid || !subjects?.length) {
       return res.status(400).json({
-        message: "organisationId, teachername, mailid, subjects are required"
+        message: "organisationId, teachername, mailid and subjects are required"
       });
     }
 
-    const teacherid = await generateTeacherId();
+    let teacher = await Teacher.findOne({ email: mailid });
 
-    const teacher = await Teacher.create({
-      organisationId,
-      teacherId: teacherid,
-      teacherName: teachername,
-      email: mailid,
-      subjects
-    });
+    // ================================
+    // CASE 1: Teacher DOES NOT EXIST
+    // ================================
+    if (!teacher) {
+      const teacherId = await generateTeacherId();
 
-    teacherEmitter.emit('teacher_created', teacher);
+      teacher = await Teacher.create({
+        teacherId,
+        teacherName: teachername,
+        email: mailid,
+        subjects,
+        organisations: [organisationId]
+      });
 
-    return res.status(201).json({
-      message: "Teacher created successfully",
+      teacherEmitter.emit("teacher_created", teacher);
+
+      return res.status(201).json({
+        message: "Teacher created & added to organisation",
+        teacher
+      });
+    }
+
+    // ================================
+    // CASE 2: Teacher Exists Already
+    // ================================
+
+    // If already in this organisation → BLOCK
+    if (teacher.organisations.includes(organisationId)) {
+      return res.status(409).json({
+        message: "Teacher already exists in this organisation"
+      });
+    }
+
+    // Otherwise → Add organisation membership
+    teacher.organisations.push(organisationId);
+
+    await teacher.save();
+
+    return res.status(200).json({
+      message: "Teacher added to organisation successfully",
       teacher
     });
 
   } catch (error) {
-
-    // Duplicate Key
-    if (error.code === 11000) {
-      console.log("Duplicate Error →", error);
-
-      const field = Object.keys(error.keyPattern)[0];
-
-      if (field === "teacherId") {
-        return res.status(409).json({
-          message: "Teacher ID already exists. Counter may be corrupted."
-        });
-      }
-
-      if (field === "organisationId_email") {
-        return res.status(409).json({
-          message: "This email already exists in your organisation."
-        });
-      }
-
-      return res.status(409).json({
-        message: `${field} already exists`
-      });
-    }
-
     console.error("Create Teacher Error:", error);
-    res.status(500).json({ message: "Server error", error });
+    return res.status(500).json({
+      message: "Server error",
+      error
+    });
   }
 };
-
 
 /* ================= READ (ORG SCOPED) ================= */
 

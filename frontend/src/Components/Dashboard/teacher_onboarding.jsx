@@ -235,7 +235,7 @@ Failed: ${errorCount}`);
           type="file"
           accept=".csv"
           onChange={handleFileChange}
-          className="block w-full"
+          className="block w-full "
         />
 
         <button

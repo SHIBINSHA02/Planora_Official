@@ -1,47 +1,43 @@
 const mongoose = require("mongoose");
 
-const TeacherSchema = new mongoose.Schema({
+const TeacherSchema = new mongoose.Schema(
+  {
+    teacherId: {
+      type: String,
+      required: true,
+      unique: true
+    },
 
-  organisationId: {
-    type: String,
-    required: true,
-    index: true
+    teacherName: {
+      type: String,
+      required: true,
+      trim: true
+    },
+
+    email: {
+      type: String,
+      required: true,
+      lowercase: true,
+      unique: true,        // 🔥 GLOBAL UNIQUE
+      trim: true
+    },
+
+    subjects: {
+      type: [String],
+      default: []
+    },
+
+    organisations: {
+      type: [String],      // 🔥 teacher belongs to MANY orgs
+      default: []
+    },
+
+    metadata: {
+      type: Object,
+      default: {}
+    }
   },
-
-  teacherId: {
-    type: String,
-    required: true,
-    unique: true
-  },
-
-  teacherName: {
-    type: String,
-    required: true,
-    trim: true
-  },
-
-  email: {
-    type: String,
-    required: true,
-    lowercase: true
-  },
-
-  subjects: {
-    type: [String],
-    default: []
-  },
-
-  metadata: {
-    type: Object,
-    default: {}
-  }
-
-}, { timestamps: true });
-
-
-TeacherSchema.index(
-  { organisationId: 1, email: 1 },
-  { unique: true }
+  { timestamps: true }
 );
 
 module.exports = mongoose.model("Teacher", TeacherSchema);
