@@ -1,3 +1,4 @@
+// backend/models/ScheduleSlot.js
 const mongoose = require("mongoose");
 
 const ScheduleSlotSchema = new mongoose.Schema({

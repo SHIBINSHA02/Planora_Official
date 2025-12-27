@@ -1,7 +1,7 @@
-// backend/models/Teacher.js
 const mongoose = require("mongoose");
 
 const TeacherSchema = new mongoose.Schema({
+
   organisationId: {
     type: String,
     required: true,
@@ -23,7 +23,6 @@ const TeacherSchema = new mongoose.Schema({
   email: {
     type: String,
     required: true,
-    unique: true,
     lowercase: true
   },
 
@@ -39,5 +38,10 @@ const TeacherSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
-module.exports = mongoose.model("Teacher", TeacherSchema);
+
+TeacherSchema.index(
+  { organisationId: 1, email: 1 },
+  { unique: true }
+);
+
 module.exports = mongoose.model("Teacher", TeacherSchema);

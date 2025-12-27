@@ -13,7 +13,7 @@ import { OrganisationProvider } from "./context/OrganisationContext";
 import { TeacherProvider } from "./context/TeacherContext";
 import { ClassroomProvider } from "./context/ClassroomContext";
 import { ScheduleProvider } from "./context/ScheduleContext";
-import { ScheduleUIProvider } from "./context/ScheduleUIContext";
+
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
@@ -24,9 +24,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <ClassroomProvider>
               <TeacherProvider>
                 <ScheduleProvider>
-                  <ScheduleUIProvider>
+                  
                     <App />
-                  </ScheduleUIProvider>
+               
                 </ScheduleProvider>
               </TeacherProvider>
             </ClassroomProvider>

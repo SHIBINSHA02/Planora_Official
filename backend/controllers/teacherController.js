@@ -21,43 +21,63 @@ const generateTeacherId = async () => {
 };
 
 /* ================= CREATE ================= */
-
 exports.createTeacher = async (req, res) => {
-    try {
-        const { organisationId, teachername, mailid, subjects } = req.body;
+  try {
+    const { organisationId, teachername, mailid, subjects } = req.body;
 
-        if (!organisationId || !teachername || !mailid || !subjects?.length) {
-            return res.status(400).json({
-                message: "organisationId, teachername, mailid, subjects are required"
-            });
-        }
-
-        const teacherid = await generateTeacherId();
-
-        const teacher = await Teacher.create({
-            organisationId,
-            teacherId: teacherid,
-            teacherName: teachername,
-            email: mailid,
-            subjects
-        });
-
-        teacherEmitter.emit('teacher_created', teacher);
-
-        res.status(201).json({
-            message: "Teacher created successfully",
-            teacher
-        });
-
-    } catch (error) {
-        if (error.code === 11000) {
-            return res.status(409).json({
-                message: "Teacher with this email or ID already exists"
-            });
-        }
-        res.status(500).json({ message: "Server error", error });
+    if (!organisationId || !teachername || !mailid || !subjects?.length) {
+      return res.status(400).json({
+        message: "organisationId, teachername, mailid, subjects are required"
+      });
     }
+
+    const teacherid = await generateTeacherId();
+
+    const teacher = await Teacher.create({
+      organisationId,
+      teacherId: teacherid,
+      teacherName: teachername,
+      email: mailid,
+      subjects
+    });
+
+    teacherEmitter.emit('teacher_created', teacher);
+
+    return res.status(201).json({
+      message: "Teacher created successfully",
+      teacher
+    });
+
+  } catch (error) {
+
+    // Duplicate Key
+    if (error.code === 11000) {
+      console.log("Duplicate Error →", error);
+
+      const field = Object.keys(error.keyPattern)[0];
+
+      if (field === "teacherId") {
+        return res.status(409).json({
+          message: "Teacher ID already exists. Counter may be corrupted."
+        });
+      }
+
+      if (field === "organisationId_email") {
+        return res.status(409).json({
+          message: "This email already exists in your organisation."
+        });
+      }
+
+      return res.status(409).json({
+        message: `${field} already exists`
+      });
+    }
+
+    console.error("Create Teacher Error:", error);
+    res.status(500).json({ message: "Server error", error });
+  }
 };
+
 
 /* ================= READ (ORG SCOPED) ================= */
 

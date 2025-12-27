@@ -1,34 +1,22 @@
+// frontend/src/Components/Classroom/classroom.jsx
+"use client";
+
 import React, { useEffect, useState } from "react";
 import ClassroomScheduleView from "./ClassroomScheduleView";
 
-import { useClassroomContext } from "../../context/useClassroomContext";
-import { useTeacher } from "../../context/useTeacher";
-
 const Classroom = () => {
-  const { classrooms, loading } = useClassroomContext();
-  const { teachers } = useTeacher();
+  const classrooms = [
+    { classroomId: "C101", classroomName: "Class 10 A" },
+    { classroomId: "C102", classroomName: "Class 10 B" },
+  ];
 
   const [selectedClassroom, setSelectedClassroom] = useState(null);
 
-  /* ================= RESET ON CLASSROOM LIST CHANGE ================= */
   useEffect(() => {
-    setSelectedClassroom(null);
-  }, [classrooms]);
-
-  /* ================= AUTO SELECT FIRST CLASSROOM ================= */
-  useEffect(() => {
-    if (!loading && classrooms.length > 0 && !selectedClassroom) {
+    if (!selectedClassroom && classrooms.length > 0) {
       setSelectedClassroom(classrooms[0].classroomId);
     }
-  }, [classrooms, loading, selectedClassroom]);
-
-  if (loading) {
-    return <p className="p-6">Loading classrooms...</p>;
-  }
-
-  if (classrooms.length === 0) {
-    return <p className="p-6">No classrooms available</p>;
-  }
+  }, [classrooms, selectedClassroom]);
 
   return (
     <div className="p-6 space-y-4">
@@ -39,17 +27,13 @@ const Classroom = () => {
       >
         {classrooms.map((cls) => (
           <option key={cls.classroomId} value={cls.classroomId}>
-            {cls.className}
+            {cls.classroomName}
           </option>
         ))}
       </select>
 
       {selectedClassroom && (
-        <ClassroomScheduleView
-          classrooms={classrooms}
-          selectedClassroom={selectedClassroom}
-          teachers={teachers}
-        />
+        <ClassroomScheduleView selectedClassroom={selectedClassroom} />
       )}
     </div>
   );

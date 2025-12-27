@@ -1,3 +1,4 @@
+// frontend/src/Components/Dashboard/DashboardNavigation.jsx
 import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { Menu, X, LogOut } from "lucide-react";
