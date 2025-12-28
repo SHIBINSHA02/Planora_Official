@@ -1,18 +1,16 @@
-// frontend/src/context/OrganisationContext.jsx
 import React, { createContext, useEffect, useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
 
 export const OrganisationContext = createContext(null);
 
 export const OrganisationProvider = ({ children }) => {
-  const { isSignedIn, getToken } = useAuth();
+  const { isSignedIn } = useAuth();
 
   const [organisations, setOrganisations] = useState([]);
   const [activeOrganisation, setActiveOrganisation] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  /* ================= FETCH ORGANISATIONS ================= */
   useEffect(() => {
     if (!isSignedIn) {
       setOrganisations([]);
@@ -26,12 +24,9 @@ export const OrganisationProvider = ({ children }) => {
         setLoading(true);
         setError(null);
 
-        const token = await getToken();
-
         const res = await fetch("/api/organisations/my-organisations", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          method: "GET",
+          credentials: "include",   // ⬅️ REQUIRED
         });
 
         if (!res.ok) {
@@ -43,7 +38,6 @@ export const OrganisationProvider = ({ children }) => {
 
         setOrganisations(orgs);
 
-        /* ================= DEFAULT SELECTION ================= */
         const savedOrgId = localStorage.getItem("activeOrganisationId");
 
         if (savedOrgId) {
@@ -63,13 +57,10 @@ export const OrganisationProvider = ({ children }) => {
     };
 
     fetchOrganisations();
-  }, [isSignedIn, getToken]);
+  }, [isSignedIn]);   // ⬅️ ONLY THIS
 
-  /* ================= SWITCH ORGANISATION ================= */
   const setActiveOrganisationById = (organisationId) => {
-    const org = organisations.find(
-      (o) => o.organisationId === organisationId
-    );
+    const org = organisations.find((o) => o.organisationId === organisationId);
 
     if (org) {
       setActiveOrganisation(org);

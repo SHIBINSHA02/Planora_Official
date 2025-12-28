@@ -5,68 +5,63 @@ const cors = require('cors');
 const morgan = require('morgan');
 const http = require('http');
 const { Server } = require('socket.io');
-const auth =require('./routes/auth')
+require('dotenv').config();
+
+const { ClerkExpressWithAuth } = require("@clerk/express");
+
+const auth = require('./routes/auth');
 const teacherRoutes = require('./routes/teacherRoutes');
 const classroomRoutes = require('./routes/classroomRoutes');
+const automate = require('./routes/automate');
+const scheduleRoutes = require("./routes/scheduleRoutes");
+const organisationRoutes = require("./routes/organisationRoutes");
 const { teacherEmitter } = require('./controllers/teacherController');
-const automate = require('./routes/automate')
-const scheduleRoutes =require("./routes/scheduleRoutes");
-require('dotenv').config();
+
 const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
 
-// MongoDB Connection
-mongoose.connect(process.env.MongoDB) 
+// MongoDB
+mongoose.connect(process.env.MongoDB)
   .then(() => console.log('✅ MongoDB connected successfully'))
-  .catch(err => console.error('❌ MongoDB connection error:', err));
+  .catch(err => console.error('❌ MongoDB error:', err));
 
-// Middleware
-const frontendURL ='http://localhost:5173';
-
+// CORS
 app.use(cors({
-}));// No config object - allows all origins ('*')
-const organisationRoutes = require("./routes/organisationRoutes");
-const ScheduleSlot = require('./models/ScheduleSlot');
-
+  origin: "http://localhost:5173",
+  credentials: true
+}));
 
 app.use(express.json());
 app.use(morgan('dev'));
 
+// ⬅️ Clerk Middleware (GLOBAL)
+const { requireAuth } = require("@clerk/express");
+
+
 // Routes
-app.use('/api/auth',auth)
+app.use('/api/auth', auth);
 app.use('/api/teachers', teacherRoutes);
 app.use('/api/classrooms', classroomRoutes);
 app.use('/api/schedule', scheduleRoutes);
-app.use('/automate', automate)
+app.use('/automate', automate);
 app.use("/api/organisations", organisationRoutes);
 
-// Socket.IO setup
+// Socket.io
 const io = new Server(server, {
-  cors: {
-    origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  
-  },
+  cors: { origin: "*", methods: ["GET","POST","PUT","DELETE"] }
 });
 
-io.on('connection', (socket) => {
-  console.log(`🟢 Client connected: ${socket.id}`);
-  socket.on('disconnect', () => console.log(`🔴 Client disconnected: ${socket.id}`));
+io.on("connection", socket => {
+  console.log(`🟢 Connected: ${socket.id}`);
+  socket.on("disconnect", () => console.log(`🔴 Disconnected: ${socket.id}`));
 });
 
-// ----------------------------
-// Connect EventEmitter to Socket.IO
-// ----------------------------
-teacherEmitter.on('teacher_created', (teacher) => {
-  console.log('📢 Broadcasting new teacher to clients:', teacher.teacherid);
-  io.emit('teacher_added', teacher);
+teacherEmitter.on("teacher_created", teacher => {
+  console.log("📢 Broadcasting:", teacher.teacherid);
+  io.emit("teacher_added", teacher);
 });
 
-// ----------------------------
-// Start Server
-// ----------------------------
-server.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📘 Teacher API: http://localhost:${PORT}/api/teachers`);
-});
+server.listen(PORT, () =>
+  console.log(`🚀 Server on http://localhost:${PORT}`)
+);
