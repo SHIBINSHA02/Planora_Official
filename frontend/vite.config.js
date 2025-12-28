@@ -23,6 +23,7 @@ export default defineConfig({
         target: 'http://localhost:3000', // Your backend server address
         changeOrigin: true, // Recommended for virtual hosts
         secure: false,      // Can be useful for http targets
+        ws: true
       }
     }
   }

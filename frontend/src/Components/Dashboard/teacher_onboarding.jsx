@@ -154,8 +154,7 @@ Failed: ${errorCount}`);
 
       {/* ================= MANUAL FORM ================= */}
       <form onSubmit={handleManualSubmit} className="space-y-6 text-gray-700">
-        <h2 className="text-xl font-semibold">Add a Single Teacher</h2>
-
+      
         <div>
           <label className="block text-sm font-medium">Teacher Name</label>
           <input
