@@ -35,3 +35,31 @@ exports.getMyOrganisations = async (req, res) => {
     });
   }
 };
+
+exports.createOrganisation = async (req, res) => {
+  try {
+    const clerkUserId = req.auth?.userId;
+    const { name } = req.body;
+
+    if (!clerkUserId) return res.status(401).json({ message: "Unauthorized" });
+    if (!name) return res.status(400).json({ message: "Organisation name required" });
+
+    const user = await User.findOne({ clerkUserId });
+    if (!user || !user.email)
+      return res.status(404).json({ message: "User not found" });
+
+    const organisation = await Organisation.create({
+      name,
+      adminName: user.email
+    });
+
+    res.status(201).json({
+      message: "Organisation created successfully",
+      organisation
+    });
+
+  } catch (err) {
+    console.error("createOrganisation error:", err);
+    res.status(500).json({ message: "Failed to create organisation" });
+  }
+};

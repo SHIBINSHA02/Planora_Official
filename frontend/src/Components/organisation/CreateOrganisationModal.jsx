@@ -1,5 +1,4 @@
 // frontend/src/Components/organisation/CreateOrganisationModal.jsx
-// frontend/src/Components/organisation/CreateOrganisationModal.jsx
 import React, { useState } from "react";
 
 const CreateOrganisationModal = ({ open, onClose }) => {
@@ -7,9 +6,20 @@ const CreateOrganisationModal = ({ open, onClose }) => {
 
   if (!open) return null;
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
-    onClose();
+
+    const res = await fetch("http://localhost:3000/api/organisations/create", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",         // ⬅️ IMPORTANT
+      body: JSON.stringify({ name }),
+    });
+
+    if (res.ok) onClose();
+    else console.log("Failed to create org");
   };
 
   return (

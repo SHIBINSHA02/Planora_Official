@@ -150,14 +150,11 @@ Failed: ${errorCount}`);
 
   return (
     <div className="space-y-8 divide-y divide-gray-200">
-      <h1 className="text-2xl font-bold text-gray-900">
-        Active Organisation: {activeOrganisation.organisationName}
-      </h1>
+     
 
       {/* ================= MANUAL FORM ================= */}
       <form onSubmit={handleManualSubmit} className="space-y-6 text-gray-700">
-        <h2 className="text-xl font-semibold">Add a Single Teacher</h2>
-
+      
         <div>
           <label className="block text-sm font-medium">Teacher Name</label>
           <input
